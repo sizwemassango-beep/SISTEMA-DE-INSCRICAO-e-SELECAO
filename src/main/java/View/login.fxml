@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+
+
+<?import com.sun.tools.jdi.JDWP.ThreadReference.Stop?>
+<?import java.awt.Rectangle?>
+<?import java.awt.Color?>
+<?import sun.java2d.d3d.D3DPaints.LinearGradient?>
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="477.0" prefWidth="774.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <SplitPane prefHeight="477.0" prefWidth="774.0">
+         <items>
+            <Pane prefHeight="200.0" prefWidth="200.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" blendMode="MULTIPLY" height="475.0" stroke="TRANSPARENT" strokeType="INSIDE" width="416.0">
+                     <fill>
+                        <LinearGradient endX="1.0" endY="1.0">
+                           <stops>
+                              <Stop>
+                                 <color>
+                                    <Color red="0.07456140220165253" green="0.49831870198249817" blue="0.8947368264198303" />
+                                 </color>
+                              </Stop>
+                              <Stop offset="1.0">
+                                 <color>
+                                    <Color red="1.0" green="1.0" blue="1.0" />
+                                 </color>
+                              </Stop>
+                           </stops>
+                        </LinearGradient>
+                     </fill>
+                  </Rectangle>
+               </children>
+            </Pane>
+         </items>
+      </SplitPane>
+   </children>
+</Pane>

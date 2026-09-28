@@ -17,16 +17,27 @@ public class Candidato extends Utilizador{
     protected String Telefone;
     protected String morada;
     protected LocalDate dataDeNascimento;
+    protected LocalDate dataInscricao;
     protected List<Inscricao> inscricoes;
     protected QuestionarioCarencia questionarioCarencia;
 
     public Candidato(String nomeCompleto, String email, String senhaHash) {
         super(nomeCompleto, email, senhaHash);
     }
+    public Candidato(){
+    }
 
     @Override
     public Perfil getPerfil() {
         return Perfil.Candidato;
+    }
+
+    public LocalDate getDataInscricao() {
+        return dataInscricao;
+    }
+
+    public void setDataInscricao(LocalDate dataInscricao) {
+        this.dataInscricao = dataInscricao;
     }
 
     public String getNumeroBI() {

@@ -21,7 +21,7 @@
                         <Insets />
                      </VBox.margin>
                   </Label>
-                  <Label alignment="CENTER" prefHeight="20.0" prefWidth="920.0" text="Crie a sua conta candidato" textAlignment="CENTER">
+                  <Label alignment="CENTER" prefHeight="20.0" prefWidth="920.0" text="Crie a sua conta candidatoDao" textAlignment="CENTER">
                      <font>
                         <Font size="20.0" />
                      </font>

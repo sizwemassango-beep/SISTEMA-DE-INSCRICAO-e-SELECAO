@@ -14,9 +14,11 @@ public abstract class Utilizador {
     protected String nomeCompleto;
     protected String email;
     protected String senhaHash;
+    protected Perfil perfil;
 
     protected Utilizador() {
     }
+
 
     protected Utilizador(String nomeCompleto, String email, String senhaHash) {
         this.nomeCompleto = nomeCompleto;
@@ -54,6 +56,19 @@ public abstract class Utilizador {
 
     public void setSenhaHash(String senhaHash) {
         this.senhaHash = senhaHash;
+    }
+
+    public abstract Perfil getPerfil();
+
+    public void setPerfil(Perfil perfil) {
+        this.perfil = perfil;
+    }
+
+    public boolean autenticar(String email, String senhaHash) {
+        if (email.equals(this.email) && senhaHash.equals(this.senhaHash))
+            return true;
+        else
+            return false;
     }
 
     @Override

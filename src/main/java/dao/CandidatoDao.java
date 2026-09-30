@@ -9,7 +9,6 @@ import java.util.List;
 
 public class CandidatoDao implements Tabela<Candidato> {
     private final ConexaoBD conexao;
-    private Candidato candidato;
 
     public CandidatoDao(ConexaoBD conexao) {
         this.conexao = conexao;
@@ -191,6 +190,7 @@ private Candidato mapear(ResultSet rs) throws SQLException {
 
 void main() {
 }
+
 
 
 

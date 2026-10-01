@@ -1,7 +1,6 @@
 package dao;
 
 import model.Administrador;
-import model.Curso;
 
 import java.sql.*;
 import java.util.List;
@@ -63,17 +62,7 @@ public class AdministradorDao implements Tabela<Administrador>{
     }
 
     @Override
-    public void registrarTabela(Administrador administrador) {
-        if (administrador.getId() == null) {
-            salvar(administrador);
-        } else {
-            atualizar(administrador);
-        }
-
-    }
-
-    @Override
-    public <T> Curso buscarId(Long id) {
+    public Administrador buscarId(Long id) {
 
         return null;
     }

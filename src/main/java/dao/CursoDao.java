@@ -1,5 +1,6 @@
 package dao;
 
+import model.Administrador;
 import model.Curso;
 
 import java.sql.*;
@@ -8,6 +9,9 @@ import java.util.List;
 
 public class CursoDao implements Tabela<Curso>{
     private ConexaoBD conexao;
+
+    public CursoDao() {
+    }
 
     @Override
     public void criar() {
@@ -53,9 +57,9 @@ public class CursoDao implements Tabela<Curso>{
     }
 
     @Override
-    public Curso buscarId(Long id) {
-        String sql = "SELECT id, nome, descricao, numero_vagas, percentual_merito, "
-                + "percentual_necessidade, inicio_inscricoes, fim_inscricoes "
+    public Administrador buscarId(Long id) {
+        String sql = "SELECT id, nome, descricao, numerovagas, percentualMerito, "
+                + "percentualNecessidade, inicioInscricoes, fimInscricoes "
                 + "FROM curso WHERE id = ?";
 
         try (Connection conn = conexao.getConexao();
@@ -63,6 +67,7 @@ public class CursoDao implements Tabela<Curso>{
 
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
+
                 return rs.next() ? mapear(rs) : null;
             }
         } catch (SQLException e) {
@@ -74,6 +79,7 @@ public class CursoDao implements Tabela<Curso>{
         @Override
         public List<Curso> listarTabela() {
             List<Curso> lista = new ArrayList<>();
+            Curso c = new Curso();
             String sql = "SELECT id, nome, descricao, numerovagas, percentualMerito, "
                     + "percentualNecessidade, inicioInscricoes, fimInscricoes "
                     + "FROM curso ORDER BY nome";
@@ -83,7 +89,15 @@ public class CursoDao implements Tabela<Curso>{
                  ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    lista.add(mapear(rs));
+                    c.setId(rs.getLong("id"));
+                    c.setNome(rs.getString("nome"));
+                    c.setDescricao(rs.getString("descricao"));
+                    c.setNumeroVagas(rs.getInt("numero_vagas"));
+                    c.setPercentualMerito(rs.getDouble("percentual_merito"));
+                    c.setPercentualNecessidade(rs.getDouble("percentual_necessidade"));
+                    c.setDataInicio(rs.getDate("inicio_inscricoes").toLocalDate());
+                    c.setDataFim(rs.getDate("fim_inscricoes").toLocalDate());
+                    lista.add(c);
                 }
             } catch (SQLException e) {
                 throw new RuntimeException("Erro ao listar cursos", e);
@@ -123,25 +137,10 @@ public class CursoDao implements Tabela<Curso>{
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-
     }
-
-
 }
 
-    private Curso mapear(ResultSet rs) throws SQLException {
-        Curso c = new Curso();
-        c.setId(rs.getLong("id"));
-        c.setNome(rs.getString("nome"));
-        c.setDescricao(rs.getString("descricao"));
-        c.setNumeroVagas(rs.getInt("numero_vagas"));
-        c.setPercentualMerito(rs.getDouble("percentual_merito"));
-        c.setPercentualNecessidade(rs.getDouble("percentual_necessidade"));
-        c.setDataInicio(rs.getDate("inicio_inscricoes").toLocalDate());
-        c.setDataFim(rs.getDate("fim_inscricoes").toLocalDate());
-        return c;
-    }
 
 
-}
+
+

@@ -1,12 +1,10 @@
 package dao;
 
-import model.Candidato;
-import model.Curso;
-import model.Inscricao;
+import model.*;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
-import dao.ConexaoBD;
 
 public class InscricaoDao implements Tabela<Inscricao>{
     private ConexaoBD conexao;
@@ -57,7 +55,7 @@ public class InscricaoDao implements Tabela<Inscricao>{
     }
 
     @Override
-    public Curso buscarId(Long id) {
+    public Administrador buscarId(Long id) {
         String sql = "SELECT id, candidatoId, cursoId, nota, status, datainscricao, "
                 + "documentos_validados FROM inscricao WHERE id = ?";
 
@@ -90,16 +88,64 @@ public class InscricaoDao implements Tabela<Inscricao>{
 
     @Override
     public List<Inscricao> listarTabela() {
-        return List.of();
+        String sql = "SELECT id, candidatoId, cursoId, nota, status, data_inscricao, "
+                + "documentos_validados FROM inscricao ORDER BY data_inscricao";
+
+        List<Inscricao> lista = new ArrayList<>();
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(mapear(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar inscrições", e);
+        }
+        return lista;
     }
 
     @Override
-    public void atualizar(Inscricao object) {
+    public void atualizar(Inscricao inscricao) {
+        String sql = "UPDATE inscricao SET nota = ?, status = ?, documentos_validados = ? "
+                + "WHERE id = ?";
 
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, inscricao.getNota());
+            ps.setString(2, inscricao.getStatus().name());
+            ps.setBoolean(3, inscricao.isDocumentosValidados());
+            ps.setLong(4, inscricao.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar inscrição", e);
+        }
     }
 
     @Override
-    public void eleminar(Inscricao object) {
+    public void eleminar(Inscricao inscricao) {
+        String sql = "DELETE FROM inscricao WHERE id = ?";
 
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, inscricao.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao eliminar inscrição", e);
+        }
+    }
+
+    private Inscricao mapear(ResultSet rs) throws SQLException {
+        Inscricao i = new Inscricao();
+        i.setId(rs.getLong("id"));
+       //i.setCandidato(Candidato.setId(rs.getLong("candidato_id")));
+        i.setNota(rs.getDouble("nota"));
+       // i.setCurso(CursoD);
+        i.setStatus(StatusInscricao.valueOf(rs.getString("status")));
+        i.setDataInscricao(rs.getDate("data_inscricao").toLocalDate());
+        i.setDocumentosValidados(rs.getBoolean("documentos_validados"));
+        return i;
     }
 }

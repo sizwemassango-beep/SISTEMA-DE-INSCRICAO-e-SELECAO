@@ -1,19 +1,18 @@
-
+package dao;
 
 import dao.ConexaoBD;
 import dao.Tabela;
+import model.Administrador;
 import model.Candidato;
-import model.Curso;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CandidatoDao implements Tabela<Candidato> {
-    private final ConexaoBD conexao;
+    private ConexaoBD conexao;
 
-    public CandidatoDao(ConexaoBD conexao) {
-        this.conexao = conexao;
+    public CandidatoDao() {
     }
 
     @Override
@@ -84,26 +83,17 @@ public class CandidatoDao implements Tabela<Candidato> {
 
     }
 
-
     @Override
-    public void registrarTabela(Candidato candidato) {
-        if (candidato.getId() == null) {
-            salvar(candidato);
-        } else {
-            atualizar(candidato);
-        }
-    }
-
-    @Override
-    public Curso buscarId(Long id) {
-
-
+    public Administrador buscarId(Long id) {
         return null;
     }
 
+
+
     @Override
     public List<Candidato> listarTabela() {
-        List<Candidato> lista = new ArrayList<>();
+       List<Candidato> lista = new ArrayList<>();
+       Candidato c = new Candidato();
         String sql="SELECT u.id, u.nome, u.email, u.senha, c.numero_bi, c.data_nascimento, c.telefone, c.morada "
                 + "FROM utilizador u JOIN candidato c ON c.id = u.id ORDER BY u.nome";
         try (Connection conn = conexao.getConexao();
@@ -111,7 +101,15 @@ public class CandidatoDao implements Tabela<Candidato> {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                lista.add(mapear(rs));
+                c.setId(rs.getLong("id"));
+                c.setNomeCompleto(rs.getString("nome"));
+                c.setEmail(rs.getString("email"));
+                c.setSenhaHash(rs.getString("senha"));
+                c.setNumeroBI(rs.getString("numero_bi"));
+                c.setDataDeNascimento(rs.getDate("data_nascimento").toLocalDate());
+                c.setTelefone(rs.getString("telefone"));
+                c.setMorada(rs.getString("morada"));
+                lista.add(c);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao listar candidatos", e);
@@ -178,21 +176,7 @@ public class CandidatoDao implements Tabela<Candidato> {
     }
 }
 
-private Candidato mapear(ResultSet rs) throws SQLException {
-    Candidato c = new Candidato();
-    c.setId(rs.getLong("id"));
-    c.setNomeCompleto(rs.getString("nome"));
-    c.setEmail(rs.getString("email"));
-    c.setSenhaHash(rs.getString("senha"));
-    c.setNumeroBI(rs.getString("numero_bi"));
-    c.setDataDeNascimento(rs.getDate("data_nascimento").toLocalDate());
-    c.setTelefone(rs.getString("telefone"));
-    c.setMorada(rs.getString("morada"));
-    return c;
-}
 
-void main() {
-}
 
 
 

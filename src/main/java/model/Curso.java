@@ -5,6 +5,7 @@
 package model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -18,8 +19,8 @@ public class Curso {
     protected  String descricao;
     protected double percentualMerito;
     protected double percentualNecessidade;
-    protected LocalDate dataInicio;
-    protected LocalDate dataFim;
+    protected LocalDateTime dataInicio;
+    protected LocalDateTime dataFim;
 
 
     public String getNome() {
@@ -78,11 +79,11 @@ public class Curso {
         this.dataInicio = dataInicio;
     }
 
-    public LocalDate getDataFim() {
+    public LocalDateTime getDataFim() {
         return dataFim;
     }
 
-    public void setDataFim(LocalDate dataFim) {
+    public void setDataFim(LocalDateTime dataFim) {
         this.dataFim = dataFim;
     }
 

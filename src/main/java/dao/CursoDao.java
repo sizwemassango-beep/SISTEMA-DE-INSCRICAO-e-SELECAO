@@ -54,13 +54,8 @@ public class CursoDao implements Tabela<Curso>{
     }
 
     @Override
-    public void registrarTabela(Curso curso) {
-
-    }
-
-    @Override
-    public <T> void buscarId(Long id) {
-
+    public <Curso> void buscarId(Long id) {
+        String sql="SELECT * FROM 'Curso' ";
     }
 
     @Override
@@ -69,12 +64,39 @@ public class CursoDao implements Tabela<Curso>{
     }
 
     @Override
-    public void atualizar(Curso object) {
+    public void atualizar(Curso curso) {
+        String sql="UPDATE 'Curso' SET nome = ?, descricao = ?, numeroVagas = ?, descricao = ?, percentualMerito = ?, percentualNecessidade = ?, inicioInscricoes = ?," +
+                " fimInscricoes= ? WHERE id = ?";
+
+        try {
+            PreparedStatement statement=ConexaoBD.getConexao().prepareStatement(sql);
+            statement.setString(1, curso.getNome());
+            statement.setString(2, curso.getDescricao());
+            statement.setString(3, curso.getDescricao());
+            statement.setInt(4, curso.getNumeroVagas());
+            statement.setDouble(5, curso.getPercentualMerito());
+            statement.setDouble(6, curso.getPercentualNecessidade());
+            statement.setDate(7, curso.getDataInicio());
+            statement.setDate (8, curso.getDataFim());
+            statement.executeUpdate(sql);
+
+
+        } catch  (SQLException e) {
+            throw new RuntimeException();
+        }
 
     }
 
     @Override
-    public void eleminar(Curso object) {
+    public void eleminar(Curso curso) {
+        String sql="DELETE FROM Curso WHERE id = ?";
+        try {
+            PreparedStatement statement=ConexaoBD.getConexao().prepareStatement(sql);
+            statement.setLong(0,curso.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 }

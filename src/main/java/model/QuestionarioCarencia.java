@@ -28,6 +28,7 @@ public class QuestionarioCarencia {
         private final String descricao;
         private final int pontos;
 
+
         FaixaRendimento(String descricao, int pontos) {
             this.descricao = descricao;
             this.pontos = pontos;

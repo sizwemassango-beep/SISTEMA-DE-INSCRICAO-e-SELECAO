@@ -19,8 +19,8 @@ public class Curso {
     protected  String descricao;
     protected double percentualMerito;
     protected double percentualNecessidade;
-    protected LocalDateTime dataInicio;
-    protected LocalDateTime dataFim;
+    protected LocalDate dataInicio;
+    protected LocalDate dataFim;
 
 
     public String getNome() {
@@ -79,11 +79,11 @@ public class Curso {
         this.dataInicio = dataInicio;
     }
 
-    public LocalDateTime getDataFim() {
+    public LocalDate getDataFim() {
         return dataFim;
     }
 
-    public void setDataFim(LocalDateTime dataFim) {
+    public void setDataFim(LocalDate dataFim) {
         this.dataFim = dataFim;
     }
 

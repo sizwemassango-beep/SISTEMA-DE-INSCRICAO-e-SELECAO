@@ -3,6 +3,8 @@
 import dao.ConexaoBD;
 import dao.Tabela;
 import model.Candidato;
+import model.Curso;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +17,7 @@ public class CandidatoDao implements Tabela<Candidato> {
     }
 
     @Override
-    public void criar(Candidato candidato) {
+    public void criar() {
         String sqlUtilizador =
                 "CREATE TABLE IF NOT EXISTS utilizador ("
                         + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
@@ -93,9 +95,10 @@ public class CandidatoDao implements Tabela<Candidato> {
     }
 
     @Override
-    public void buscarId(Long id) {
+    public Curso buscarId(Long id) {
 
 
+        return null;
     }
 
     @Override

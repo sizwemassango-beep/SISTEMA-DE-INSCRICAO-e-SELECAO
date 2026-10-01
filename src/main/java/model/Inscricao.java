@@ -5,6 +5,7 @@
 package model;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -14,6 +15,7 @@ import java.util.Objects;
 public class Inscricao {
     protected Long id;
     protected Candidato candidato;
+    protected Curso curso;
     protected double nota;
     protected StatusInscricao status;
     protected LocalDate dataInscricao;
@@ -21,6 +23,14 @@ public class Inscricao {
 
     public Long getId() {
         return id;
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
     }
 
     public void setId(Long id) {

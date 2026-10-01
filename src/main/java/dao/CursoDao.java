@@ -2,16 +2,15 @@ package dao;
 
 import model.Curso;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CursoDao implements Tabela<Curso>{
     private ConexaoBD conexao;
 
     @Override
-    public void criar(Curso curso) {
+    public void criar() {
         String query="Create TABLE 'Curso' (" +
                 "id INT PRIMARY KEY AUTO_INCREMENT)," +
                 "Nome VARCHAR(50) NOT NULL," +
@@ -54,14 +53,43 @@ public class CursoDao implements Tabela<Curso>{
     }
 
     @Override
-    public <Curso> void buscarId(Long id) {
-        String sql="SELECT * FROM 'Curso' ";
+    public Curso buscarId(Long id) {
+        String sql = "SELECT id, nome, descricao, numero_vagas, percentual_merito, "
+                + "percentual_necessidade, inicio_inscricoes, fim_inscricoes "
+                + "FROM curso WHERE id = ?";
+
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapear(rs) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar curso", e);
+        }
     }
 
-    @Override
-    public List<Curso> listarTabela() {
-        return List.of();
-    }
+
+        @Override
+        public List<Curso> listarTabela() {
+            List<Curso> lista = new ArrayList<>();
+            String sql = "SELECT id, nome, descricao, numerovagas, percentualMerito, "
+                    + "percentualNecessidade, inicioInscricoes, fimInscricoes "
+                    + "FROM curso ORDER BY nome";
+
+            try (Connection conn = conexao.getConexao();
+                 PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    lista.add(mapear(rs));
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException("Erro ao listar cursos", e);
+            }
+            return lista;
+        }
 
     @Override
     public void atualizar(Curso curso) {
@@ -76,15 +104,14 @@ public class CursoDao implements Tabela<Curso>{
             statement.setInt(4, curso.getNumeroVagas());
             statement.setDouble(5, curso.getPercentualMerito());
             statement.setDouble(6, curso.getPercentualNecessidade());
-            statement.setDate(7, curso.getDataInicio());
-            statement.setDate (8, curso.getDataFim());
+            statement.setDate(7, java.sql.Date.valueOf(curso.getDataInicio()));
+            statement.setDate(8, java.sql.Date.valueOf(curso.getDataFim()));
             statement.executeUpdate(sql);
 
 
         } catch  (SQLException e) {
             throw new RuntimeException();
         }
-
     }
 
     @Override
@@ -99,4 +126,22 @@ public class CursoDao implements Tabela<Curso>{
 
 
     }
+
+
+}
+
+    private Curso mapear(ResultSet rs) throws SQLException {
+        Curso c = new Curso();
+        c.setId(rs.getLong("id"));
+        c.setNome(rs.getString("nome"));
+        c.setDescricao(rs.getString("descricao"));
+        c.setNumeroVagas(rs.getInt("numero_vagas"));
+        c.setPercentualMerito(rs.getDouble("percentual_merito"));
+        c.setPercentualNecessidade(rs.getDouble("percentual_necessidade"));
+        c.setDataInicio(rs.getDate("inicio_inscricoes").toLocalDate());
+        c.setDataFim(rs.getDate("fim_inscricoes").toLocalDate());
+        return c;
+    }
+
+
 }

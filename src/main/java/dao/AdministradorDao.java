@@ -1,6 +1,7 @@
 package dao;
 
 import model.Administrador;
+import model.Curso;
 
 import java.sql.*;
 import java.util.List;
@@ -9,7 +10,7 @@ public class AdministradorDao implements Tabela<Administrador>{
     private ConexaoBD conexao;
 
     @Override
-    public void criar(Administrador administrador) {
+    public void criar() {
         String sqlAdministrador =
                 "CREATE TABLE IF NOT EXISTS administrador ("
                         + "id BIGINT PRIMARY KEY, "
@@ -72,8 +73,9 @@ public class AdministradorDao implements Tabela<Administrador>{
     }
 
     @Override
-    public <T> void buscarId(Long id) {
+    public <T> Curso buscarId(Long id) {
 
+        return null;
     }
 
     @Override

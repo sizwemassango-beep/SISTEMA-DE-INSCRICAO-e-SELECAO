@@ -5,6 +5,7 @@
 package model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,19 +13,24 @@ import java.util.Objects;
  *
  * @author Sizwe Massango
  */
-public class Candidato extends Utilizador{
-    protected  String numeroBI;
-    protected String Telefone;
+
+
+public class Candidato extends Utilizador {
+    protected String numeroBI;
+    protected String telefone;
+    protected String provincia;
+    protected String distrito;
     protected String morada;
     protected LocalDate dataDeNascimento;
     protected LocalDate dataInscricao;
-    protected List<Inscricao> inscricoes;
+    protected List<Inscricao> inscricoes = new ArrayList<>();
     protected QuestionarioCarencia questionarioCarencia;
 
     public Candidato(String nomeCompleto, String email, String senhaHash) {
         super(nomeCompleto, email, senhaHash);
     }
-    public Candidato(){
+
+    public Candidato() {
     }
 
     @Override
@@ -49,11 +55,27 @@ public class Candidato extends Utilizador{
     }
 
     public String getTelefone() {
-        return Telefone;
+        return telefone;
     }
 
     public void setTelefone(String telefone) {
-        Telefone = telefone;
+        this.telefone = telefone;
+    }
+
+    public String getProvincia() {
+        return provincia;
+    }
+
+    public void setProvincia(String provincia) {
+        this.provincia = provincia;
+    }
+
+    public String getDistrito() {
+        return distrito;
+    }
+
+    public void setDistrito(String distrito) {
+        this.distrito = distrito;
     }
 
     public String getMorada() {
@@ -77,7 +99,7 @@ public class Candidato extends Utilizador{
     }
 
     public void setInscricao(List<Inscricao> inscricao) {
-        this.inscricoes = inscricao;
+        this.inscricoes = inscricao == null ? new ArrayList<>() : inscricao;
     }
 
     public QuestionarioCarencia getQuestionarioCarencia() {
@@ -86,11 +108,21 @@ public class Candidato extends Utilizador{
 
     public void setQuestionarioCarencia(QuestionarioCarencia questionarioCarencia) {
         this.questionarioCarencia = questionarioCarencia;
+        if (questionarioCarencia != null && id != null) {
+            questionarioCarencia.setCandidatoId(id);
+        }
     }
 
-    public void adicionarInscricao(Inscricao inscricao){
-        inscricoes.add(inscricao);
+    @Override
+    public void setId(Long id) {
+        super.setId(id);
+        if (questionarioCarencia != null) {
+            questionarioCarencia.setCandidatoId(id);
+        }
+    }
 
+    public void adicionarInscricao(Inscricao inscricao) {
+        inscricoes.add(inscricao);
     }
 
     @Override

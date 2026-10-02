@@ -11,16 +11,17 @@ import java.util.Objects;
  *
  * @author Sizwe Massango
  */
+
+
 public class Curso {
     protected Long id;
     protected String nome;
     protected int numeroVagas;
-    protected  String descricao;
+    protected String descricao;
     protected double percentualMerito;
     protected double percentualNecessidade;
     protected LocalDate dataInicio;
     protected LocalDate dataFim;
-
 
     public String getNome() {
         return nome;
@@ -86,16 +87,21 @@ public class Curso {
         this.dataFim = dataFim;
     }
 
-    public int getVagasMerito(){
-        return 1;
+    public int getVagasMerito() {
+        return (int) Math.round(numeroVagas * percentualMerito / 100.0);
     }
 
-    public int getVagasNecessidade(){
-        return 1;
+    public int getVagasNecessidade() {
+        int porPercentagem = (int) Math.round(numeroVagas * percentualNecessidade / 100.0);
+        return Math.min(porPercentagem, numeroVagas - getVagasMerito());
     }
 
-    public boolean inscricoesAbertas(){
-     return true;
+    public boolean inscricoesAbertas() {
+        if (dataInicio == null || dataFim == null) {
+            return false;
+        }
+        LocalDate hoje = LocalDate.now();
+        return !hoje.isBefore(dataInicio) && !hoje.isAfter(dataFim);
     }
 
     @Override
@@ -112,14 +118,6 @@ public class Curso {
 
     @Override
     public String toString() {
-        return "Curso{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", descricao='" + descricao + '\'' +
-                ", percentualMerito=" + percentualMerito +
-                ", percentualNecessidade=" + percentualNecessidade +
-                ", dataInicio=" + dataInicio +
-                ", dataFim=" + dataFim +
-                '}';
+        return nome + " (" + numeroVagas + " vagas)";
     }
 }

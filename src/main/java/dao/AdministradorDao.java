@@ -2,11 +2,26 @@ package dao;
 
 import model.Administrador;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class AdministradorDao implements Tabela<Administrador>{
-    private ConexaoBD conexao;
+public class AdministradorDao implements Tabela<Administrador> {
+
+    private static final String SELECT_BASE =
+            "SELECT u.id, u.nome, u.email, u.senha, a.cargo "
+                    + "FROM utilizador u JOIN administrador a ON a.id = u.id ";
+
+    private final ConexaoBD conexao;
+
+    public AdministradorDao(ConexaoBD conexao) {
+        this.conexao = conexao;
+    }
 
     @Override
     public void criar(Administrador administrador) {
@@ -18,13 +33,11 @@ public class AdministradorDao implements Tabela<Administrador>{
 
         try (Connection conn = conexao.getConexao();
              Statement st = conn.createStatement()) {
-            //st.executeUpdate();
             st.executeUpdate(sqlAdministrador);
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao criar tabelas", e);
         }
     }
-
 
     @Override
     public void salvar(Administrador administrador) {
@@ -58,7 +71,6 @@ public class AdministradorDao implements Tabela<Administrador>{
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao salvar administrador", e);
         }
-
     }
 
     @Override
@@ -68,17 +80,40 @@ public class AdministradorDao implements Tabela<Administrador>{
         } else {
             atualizar(administrador);
         }
-
     }
 
     @Override
-    public <T> void buscarId(Long id) {
+    public Optional<Administrador> buscarId(Long id) {
+        String sql = SELECT_BASE + "WHERE u.id = ?";
 
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapear(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar administrador", e);
+        }
     }
 
     @Override
     public List<Administrador> listarTabela() {
-        return List.of();
+        List<Administrador> lista = new ArrayList<>();
+        String sql = SELECT_BASE + "ORDER BY u.nome";
+
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(mapear(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar administradores", e);
+        }
+        return lista;
     }
 
     @Override
@@ -109,7 +144,6 @@ public class AdministradorDao implements Tabela<Administrador>{
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar administrador", e);
         }
-
     }
 
     @Override
@@ -132,6 +166,15 @@ public class AdministradorDao implements Tabela<Administrador>{
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao eliminar administrador", e);
         }
+    }
 
+    private Administrador mapear(ResultSet rs) throws SQLException {
+        Administrador a = new Administrador();
+        a.setId(rs.getLong("id"));
+        a.setNomeCompleto(rs.getString("nome"));
+        a.setEmail(rs.getString("email"));
+        a.setSenhaHash(rs.getString("senha"));
+        a.setCargo(rs.getString("cargo"));
+        return a;
     }
 }

@@ -8,9 +8,10 @@ import java.util.Objects;
 
 /**
  *
- * @author Sizwe Massango
+ * @author Vilker001
  */
     
+
 public class QuestionarioCarencia {
 
     public static final int PONTUACAO_MAXIMA = 100;
@@ -98,6 +99,7 @@ public class QuestionarioCarencia {
     }
 
     private Long id;
+    private Long candidatoId;
     private FaixaRendimento rendimentoFamiliar;
     private SituacaoLaboral situacaoLaboral;
     private double distanciaKm;
@@ -123,6 +125,14 @@ public class QuestionarioCarencia {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getCandidatoId() {
+        return candidatoId;
+    }
+
+    public void setCandidatoId(Long candidatoId) {
+        this.candidatoId = candidatoId;
     }
 
     public FaixaRendimento getRendimentoFamiliar() {
@@ -255,7 +265,7 @@ public class QuestionarioCarencia {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         QuestionarioCarencia that = (QuestionarioCarencia) o;
-        return Objects.equals(id, that.id);
+        return id != null && id.equals(that.id);
     }
 
     @Override
@@ -267,6 +277,7 @@ public class QuestionarioCarencia {
     public String toString() {
         return "QuestionarioCarencia{" +
                 "id=" + id +
+                ", candidatoId=" + candidatoId +
                 ", rendimentoFamiliar=" + rendimentoFamiliar +
                 ", situacaoLaboral=" + situacaoLaboral +
                 ", distanciaKm=" + distanciaKm +
@@ -276,4 +287,3 @@ public class QuestionarioCarencia {
                 '}';
     }
 }
-

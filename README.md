@@ -1,3 +1,10 @@
+0. TEA(TABELA DE ENTIDADE E ASSOCIACAO)
+  <img width="3080" height="1189" alt="Sistema de inscricao e selecao (1)" src="https://github.com/user-attachments/assets/00cb7fb0-fdca-4f5f-9e8a-9d74bc793d65" />
+
+
+
+
+
 1. Sobre o sistema
 
 A instituição oferece aulas gratuitas de preparação para o exame nacional de admissão à universidade. Hoje, quem quer inscrever-se precisa de se deslocar até Maputo, mesmo vindo de outras províncias, o que é caro e demorado para muitas famílias.

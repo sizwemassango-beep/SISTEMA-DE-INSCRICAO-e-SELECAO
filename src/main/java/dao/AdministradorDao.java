@@ -24,7 +24,7 @@ public class AdministradorDao implements Tabela<Administrador> {
     }
 
     @Override
-    public void criar(Administrador administrador) {
+    public void criar() {
         String sqlAdministrador =
                 "CREATE TABLE IF NOT EXISTS administrador ("
                         + "id BIGINT PRIMARY KEY, "

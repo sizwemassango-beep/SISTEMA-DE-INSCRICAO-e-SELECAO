@@ -26,7 +26,7 @@ public class CandidatoDao implements Tabela<Candidato> {
     }
 
     @Override
-    public void criar(Candidato candidato) {
+    public void criar() {
         String sqlUtilizador =
                 "CREATE TABLE IF NOT EXISTS utilizador ("
                         + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "

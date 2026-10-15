@@ -23,7 +23,7 @@ public class QuestionarioCarenciaDao implements Tabela<QuestionarioCarencia> {
     }
 
     @Override
-    public void criar(QuestionarioCarencia q) {
+    public void criar() {
         String sql = "CREATE TABLE IF NOT EXISTS questionario_carencia ("
                 + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                 + "candidato_id BIGINT NOT NULL UNIQUE, "

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Tabela<T> {
-    void criar(T t);
+    void criar();
     void salvar(T t);
     void registrarTabela(T t);
     Optional<T> buscarId(Long id);

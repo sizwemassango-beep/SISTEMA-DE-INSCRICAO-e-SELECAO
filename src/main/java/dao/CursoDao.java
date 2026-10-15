@@ -21,7 +21,7 @@ public class CursoDao implements Tabela<Curso> {
     }
 
     @Override
-    public void criar(Curso curso) {
+    public void criar() {
         String sql = "CREATE TABLE IF NOT EXISTS curso ("
                 + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                 + "nome VARCHAR(100) NOT NULL, "

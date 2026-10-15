@@ -14,13 +14,31 @@ import java.util.Objects;
 public class Inscricao {
     protected Long id;
     protected Candidato candidato;
+    protected Curso curso;
     protected double nota;
-    protected StatusInscricao status;
+    protected StatusInscricao status=StatusInscricao.PENDENTE;
     protected LocalDate dataInscricao;
     protected boolean documentosValidados;
+    protected boolean resultadoPublicado;
 
     public Long getId() {
         return id;
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
+    }
+
+    public boolean isResultadoPublicado() {
+        return resultadoPublicado;
+    }
+
+    public void setResultadoPublicado(boolean resultadoPublicado) {
+        this.resultadoPublicado = resultadoPublicado;
     }
 
     public void setId(Long id) {

@@ -358,3 +358,174 @@
     -fx-background-color: transparent;
     -fx-padding: 0;
 }
+
+/* ============================ COMBOBOX POPUP ============================ */
+.combo-box .list-cell {
+    -fx-text-fill: -fx-text-primary;
+    -fx-background-color: -fx-surface-color;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+.combo-box-popup .list-cell {
+    -fx-text-fill: #0F172A;
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 13px;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #1E3A8A;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dark-theme .combo-box-popup .list-view {
+    -fx-background-color: #1E293B;
+    -fx-border-color: #334155;
+}
+
+.dark-theme .combo-box-popup .list-cell {
+    -fx-text-fill: #F8FAFC;
+    -fx-background-color: #1E293B;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 13px;
+}
+
+.dark-theme .combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #334155;
+    -fx-text-fill: #F8FAFC;
+}
+
+.dark-theme .combo-box-popup .list-cell:filled:selected,
+.dark-theme .combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: #FFFFFF;
+}
+
+.combo-box > .combo-box-base > .label {
+    -fx-text-fill: -fx-text-primary;
+}
+
+.dark-theme .combo-box > .combo-box-base > .label {
+    -fx-text-fill: #F8FAFC;
+}
+
+.combo-box > .arrow-button > .arrow {
+    -fx-background-color: #334155;
+}
+
+.dark-theme .combo-box > .arrow-button > .arrow {
+    -fx-background-color: #CBD5E1;
+}
+
+/* ============================ DATE PICKER POPUP ============================ */
+.date-picker-popup {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #F1F5F9;
+}
+
+.date-picker-popup .month-year-pane .label {
+    -fx-text-fill: #0F172A;
+    -fx-font-weight: bold;
+}
+
+.date-picker-popup > * > .spinner > .button > .left-arrow,
+.date-picker-popup > * > .spinner > .button > .right-arrow {
+    -fx-background-color: #0F172A;
+}
+
+.date-picker-popup .day-name-cell {
+    -fx-text-fill: #334155;
+    -fx-font-weight: 600;
+    -fx-font-size: 11px;
+}
+
+.date-picker-popup .day-cell {
+    -fx-text-fill: #0F172A;
+    -fx-background-color: transparent;
+}
+
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #EFF6FF;
+    -fx-background-radius: 6px;
+}
+
+.date-picker-popup .day-cell.selected,
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 6px;
+}
+
+.date-picker-popup .day-cell.today {
+    -fx-border-color: #2563EB;
+    -fx-border-radius: 6px;
+    -fx-text-fill: #2563EB;
+    -fx-font-weight: bold;
+}
+
+.dark-theme .date-picker-popup {
+    -fx-background-color: #1E293B;
+    -fx-border-color: #334155;
+}
+
+.dark-theme .date-picker-popup .month-year-pane {
+    -fx-background-color: #0F172A;
+}
+
+.dark-theme .date-picker-popup .month-year-pane .label {
+    -fx-text-fill: #F8FAFC;
+    -fx-font-weight: bold;
+}
+
+.dark-theme .date-picker-popup > * > .spinner > .button > .left-arrow,
+.dark-theme .date-picker-popup > * > .spinner > .button > .right-arrow {
+    -fx-background-color: #F8FAFC;
+}
+
+.dark-theme .date-picker-popup .day-name-cell {
+    -fx-text-fill: #94A3B8;
+    -fx-font-weight: 600;
+    -fx-font-size: 11px;
+}
+
+.dark-theme .date-picker-popup .day-cell {
+    -fx-text-fill: #F8FAFC;
+    -fx-background-color: transparent;
+}
+
+.dark-theme .date-picker-popup .day-cell:hover {
+    -fx-background-color: #334155;
+    -fx-background-radius: 6px;
+}
+
+.dark-theme .date-picker-popup .day-cell.selected,
+.dark-theme .date-picker-popup .day-cell:selected {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 6px;
+}
+
+.dark-theme .date-picker-popup .day-cell.today {
+    -fx-border-color: #60A5FA;
+    -fx-border-radius: 6px;
+    -fx-text-fill: #60A5FA;
+    -fx-font-weight: bold;
+}

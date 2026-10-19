@@ -47,6 +47,10 @@ public class InscricaoController extends ControllerBase {
         inscricaoService.processarNovaInscricao(candidato, questionario);
     }
 
+    public void submeterInscricao(Candidato candidato, QuestionarioCarencia questionario, Curso curso) throws IllegalArgumentException {
+        inscricaoService.processarNovaInscricao(candidato, questionario, curso);
+    }
+
     public void gerarComprovativoPdf(Candidato candidato, File destino) throws IOException, DocumentException {
         inscricaoService.getRelatorioPdfService().exportarComprovativoInscricao(candidato, destino);
     }
@@ -82,11 +86,34 @@ public class InscricaoController extends ControllerBase {
         inscricaoService.getInscricaoDao().atualizarStatus(inscricaoId, status);
     }
 
+    public void aprovarCandidato(Long inscricaoId) {
+        inscricaoService.getInscricaoDao().atualizarStatus(inscricaoId, StatusInscricao.APROVADO);
+    }
+
+    public void rejeitarCandidato(Long inscricaoId, String motivo) {
+        inscricaoService.getInscricaoDao().atualizarStatusComMotivo(inscricaoId, StatusInscricao.NAO_APROVADO, motivo);
+    }
+
+    public void colocarListaEspera(Long inscricaoId) {
+        inscricaoService.getInscricaoDao().atualizarStatus(inscricaoId, StatusInscricao.LISTA_ESPERA);
+    }
+
     public void validarDocumentosInscricao(Long inscricaoId, boolean validado) {
         inscricaoService.getInscricaoDao().atualizarValidacaoDocumentos(inscricaoId, validado);
     }
 
-    // --- Métodos de Validação ---
+    public void submeterDocumentos(Long inscricaoId, String docIdentificacao, String docCertificado10,
+                                   String docCertificado12OuRecibo, String tipoComprovativo12,
+                                   String cartaMotivacao) {
+        inscricaoService.getInscricaoDao().submeterDocumentos(
+                inscricaoId, docIdentificacao, docCertificado10,
+                docCertificado12OuRecibo, tipoComprovativo12, cartaMotivacao
+        );
+    }
+
+    public List<Inscricao> listarTodasInscricoes() {
+        return inscricaoService.getInscricaoDao().listarTabela();
+    }
 
     public static boolean isEmailValido(String email) {
         if (email == null) return false;
@@ -124,8 +151,6 @@ public class InscricaoController extends ControllerBase {
     public static boolean isDistanciaValida(double distanciaKm) {
         return distanciaKm >= 0.0 && distanciaKm <= 2000.0;
     }
-
-    // --- Métodos de Formatação e Filtro de Campos da Interface ---
 
     public static void aplicarFiltroCelular(TextField textField, int maxDigitos) {
         UnaryOperator<TextFormatter.Change> filtro = change -> {

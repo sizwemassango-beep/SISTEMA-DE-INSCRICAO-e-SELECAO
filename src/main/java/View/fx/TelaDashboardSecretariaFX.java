@@ -1,5 +1,6 @@
 package View.fx;
 
+import controller.InscricaoController;
 import controller.PainelController;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -19,9 +20,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+
 public class TelaDashboardSecretariaFX extends BorderPane {
 
     private final PainelController controller;
+    private final InscricaoController inscricaoController;
 
     private StackPane areaConteudo;
     private ObservableList<Candidato> listaCandidatosObservable;
@@ -36,6 +39,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
 
     public TelaDashboardSecretariaFX() {
         this.controller = new PainelController();
+        this.inscricaoController = new InscricaoController();
         this.loginController = new controller.LoginController();
         this.listaCandidatosObservable = FXCollections.observableArrayList();
         construirInterface();
@@ -275,7 +279,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         Label lblTitulo = new Label("Base de Dados de Candidatos");
         lblTitulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary;");
 
-        Label lblSub = new Label("Consulte, filtre e exporte os registos de candidaturas");
+        Label lblSub = new Label("Consulte, filtre, aprove e exporte os registos de candidaturas");
         lblSub.setStyle("-fx-font-size: 13px; -fx-text-fill: -fx-text-secondary;");
         titulos.getChildren().addAll(lblTitulo, lblSub);
 
@@ -335,9 +339,188 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         tabelaCandidatos.setItems(dadosFiltrados);
         VBox.setVgrow(tabelaCandidatos, Priority.ALWAYS);
 
-        box.getChildren().addAll(header, tabelaCandidatos);
+        VBox painelAcoes = criarPainelAprovacao();
+
+        box.getChildren().addAll(header, tabelaCandidatos, painelAcoes);
         areaConteudo.getChildren().setAll(box);
     }
+
+    private VBox criarPainelAprovacao() {
+        VBox card = new VBox(14);
+        card.getStyleClass().add("card");
+
+        Label lblTit = new Label("Acções sobre o Candidato Seleccionado");
+        lblTit.getStyleClass().add("card-title");
+
+        HBox boxBotoes = new HBox(12);
+        boxBotoes.setAlignment(Pos.CENTER_LEFT);
+
+        Button btnAprovar = new Button("✔ Aprovar Candidato");
+        btnAprovar.setStyle("-fx-background-color: #10B981; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 10px 18px; -fx-cursor: hand;");
+
+        Button btnListaEspera = new Button("📋 Lista de Espera");
+        btnListaEspera.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 10px 18px; -fx-cursor: hand;");
+
+        Button btnRejeitar = new Button("✖ Rejeitar Candidato");
+        btnRejeitar.setStyle("-fx-background-color: #EF4444; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 10px 18px; -fx-cursor: hand;");
+
+        Button btnVerDocs = new Button("📁 Ver Documentos Submetidos");
+        btnVerDocs.getStyleClass().add("button-secondary");
+
+        Button btnValidarDocs = new Button("✔ Validar Documentos");
+        btnValidarDocs.setStyle("-fx-background-color: #059669; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 10px 18px; -fx-cursor: hand;");
+
+        btnAprovar.setOnAction(e -> {
+            Candidato c = tabelaCandidatos.getSelectionModel().getSelectedItem();
+            if (c == null) { mostrarAviso("Seleccione um candidato na tabela."); return; }
+            inscricaoController.buscarInscricaoPorCandidato(c.getId()).ifPresentOrElse(
+                    ins -> {
+                        inscricaoController.aprovarCandidato(ins.getId());
+                        mostrarSucesso("Candidato " + c.getNomeCompleto() + " APROVADO com sucesso.");
+                        carregarDados();
+                    },
+                    () -> mostrarAviso("Inscrição não encontrada para este candidato.")
+            );
+        });
+
+        btnListaEspera.setOnAction(e -> {
+            Candidato c = tabelaCandidatos.getSelectionModel().getSelectedItem();
+            if (c == null) { mostrarAviso("Seleccione um candidato na tabela."); return; }
+            inscricaoController.buscarInscricaoPorCandidato(c.getId()).ifPresentOrElse(
+                    ins -> {
+                        inscricaoController.colocarListaEspera(ins.getId());
+                        mostrarSucesso("Candidato colocado em Lista de Espera.");
+                        carregarDados();
+                    },
+                    () -> mostrarAviso("Inscrição não encontrada.")
+            );
+        });
+
+        btnRejeitar.setOnAction(e -> {
+            Candidato c = tabelaCandidatos.getSelectionModel().getSelectedItem();
+            if (c == null) { mostrarAviso("Seleccione um candidato na tabela."); return; }
+            TextInputDialog dlg = new TextInputDialog();
+            dlg.setTitle("Rejeitar Candidato");
+            dlg.setHeaderText("Motivo da Rejeição (opcional)");
+            dlg.setContentText("Motivo:");
+            dlg.showAndWait().ifPresent(motivo ->
+                inscricaoController.buscarInscricaoPorCandidato(c.getId()).ifPresentOrElse(
+                        ins -> {
+                            inscricaoController.rejeitarCandidato(ins.getId(), motivo.trim().isEmpty() ? null : motivo.trim());
+                            mostrarSucesso("Candidato " + c.getNomeCompleto() + " rejeitado.");
+                            carregarDados();
+                        },
+                        () -> mostrarAviso("Inscrição não encontrada.")
+                )
+            );
+        });
+
+        btnVerDocs.setOnAction(e -> {
+            Candidato c = tabelaCandidatos.getSelectionModel().getSelectedItem();
+            if (c == null) { mostrarAviso("Seleccione um candidato na tabela."); return; }
+            inscricaoController.buscarInscricaoPorCandidato(c.getId()).ifPresentOrElse(
+                    this::mostrarDialogDocumentos,
+                    () -> mostrarAviso("Inscrição não encontrada.")
+            );
+        });
+
+        btnValidarDocs.setOnAction(e -> {
+            Candidato c = tabelaCandidatos.getSelectionModel().getSelectedItem();
+            if (c == null) { mostrarAviso("Seleccione um candidato na tabela."); return; }
+            inscricaoController.buscarInscricaoPorCandidato(c.getId()).ifPresentOrElse(
+                    ins -> {
+                        inscricaoController.validarDocumentosInscricao(ins.getId(), true);
+                        mostrarSucesso("Documentos do candidato validados com sucesso.");
+                        carregarDados();
+                    },
+                    () -> mostrarAviso("Inscrição não encontrada.")
+            );
+        });
+
+        boxBotoes.getChildren().addAll(btnAprovar, btnListaEspera, btnRejeitar, btnVerDocs, btnValidarDocs);
+        card.getChildren().addAll(lblTit, new Separator(), boxBotoes);
+        return card;
+    }
+
+    private void mostrarDialogDocumentos(model.Inscricao inscricao) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Documentos Submetidos");
+        dialog.setHeaderText("Candidato: " + (inscricao.getCandidato() != null ? inscricao.getCandidato().getNomeCompleto() : "—"));
+        dialog.getDialogPane().setMinWidth(500);
+
+        VBox conteudo = new VBox(12);
+        conteudo.setPadding(new Insets(12));
+
+        adicionarLinhaDocumento(conteudo, "Documento de Identificação (BI):", inscricao.getDocIdentificacao());
+        adicionarLinhaDocumento(conteudo, "Certificado 10ª Classe:", inscricao.getDocCertificado10());
+        adicionarLinhaDocumento(conteudo,
+                (inscricao.getTipoComprovativo12() != null ? inscricao.getTipoComprovativo12() : "Doc. 12ª Classe") + ":",
+                inscricao.getDocCertificado12OuRecibo());
+
+        if (inscricao.getCartaMotivacao() != null && !inscricao.getCartaMotivacao().isEmpty()) {
+            Label lblTitMot = new Label("Carta de Motivação:");
+            lblTitMot.setStyle("-fx-font-weight: 600; -fx-text-fill: -fx-text-primary;");
+            TextArea txtMot = new TextArea(inscricao.getCartaMotivacao());
+            txtMot.setEditable(false);
+            txtMot.setWrapText(true);
+            txtMot.setPrefRowCount(4);
+            conteudo.getChildren().addAll(new Separator(), lblTitMot, txtMot);
+        }
+
+        Label lblStatus = new Label("Documentos validados: " + (inscricao.isDocumentosValidados() ? "Sim ✔" : "Não ✖"));
+        lblStatus.setStyle("-fx-font-weight: bold; -fx-text-fill: " + (inscricao.isDocumentosValidados() ? "#15803D" : "#D97706") + ";");
+        conteudo.getChildren().add(lblStatus);
+
+        dialog.getDialogPane().setContent(conteudo);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+
+    private void adicionarLinhaDocumento(VBox container, String rotulo, String caminho) {
+        HBox linha = new HBox(12);
+        linha.setAlignment(Pos.CENTER_LEFT);
+
+        Label lbl = new Label(rotulo);
+        lbl.setStyle("-fx-font-weight: 600; -fx-min-width: 210px; -fx-text-fill: -fx-text-primary;");
+
+        if (caminho == null || caminho.isEmpty()) {
+            Label lblVazio = new Label("— Não submetido");
+            lblVazio.setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-style: italic;");
+            linha.getChildren().addAll(lbl, lblVazio);
+        } else {
+            java.io.File ficheiro = new java.io.File(caminho);
+            Label lblNome = new Label(ficheiro.getName());
+            lblNome.setStyle("-fx-text-fill: -fx-text-primary;");
+
+            Button btnAbrir = new Button("📂 Abrir");
+            btnAbrir.getStyleClass().add("button-secondary");
+            btnAbrir.setOnAction(e -> {
+                try {
+                    java.awt.Desktop.getDesktop().open(ficheiro);
+                } catch (Exception ex) {
+                    mostrarAviso("Não foi possível abrir o ficheiro: " + ex.getMessage());
+                }
+            });
+
+            linha.getChildren().addAll(lbl, lblNome, btnAbrir);
+        }
+        container.getChildren().add(linha);
+    }
+
+    private void mostrarAviso(String msg) {
+        Alert a = new Alert(Alert.AlertType.WARNING);
+        a.setTitle("Aviso");
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    private void mostrarSucesso(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Sucesso");
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
 
     private void mostrarGestaoCursos() {
         VBox box = new VBox(20);
@@ -620,6 +803,29 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         PasswordField txtSenha = new PasswordField();
         txtSenha.setPromptText("Senha de acesso");
 
+        TextField txtSenhaVisivel = new TextField();
+        txtSenhaVisivel.setPromptText("Senha de acesso");
+        txtSenhaVisivel.setVisible(false);
+        txtSenhaVisivel.setManaged(false);
+        txtSenha.textProperty().bindBidirectional(txtSenhaVisivel.textProperty());
+
+        Button btnOlho = new Button("👁");
+        btnOlho.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 2px 6px;");
+        btnOlho.setOnAction(ev -> {
+            boolean mostrar = !txtSenhaVisivel.isVisible();
+            txtSenha.setVisible(!mostrar);
+            txtSenha.setManaged(!mostrar);
+            txtSenhaVisivel.setVisible(mostrar);
+            txtSenhaVisivel.setManaged(mostrar);
+        });
+
+        HBox boxSenhaAdmin = new HBox(4, txtSenha, txtSenhaVisivel, btnOlho);
+        boxSenhaAdmin.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        HBox.setHgrow(txtSenha, Priority.ALWAYS);
+        HBox.setHgrow(txtSenhaVisivel, Priority.ALWAYS);
+        txtSenha.setMaxWidth(Double.MAX_VALUE);
+        txtSenhaVisivel.setMaxWidth(Double.MAX_VALUE);
+
         TextField txtCargo = new TextField();
         txtCargo.setPromptText("Cargo (ex: Secretaria Geral)");
 
@@ -631,7 +837,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
             try {
                 String nome = txtNome.getText() != null ? txtNome.getText().trim() : "";
                 String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
-                String senha = txtSenha.getText();
+                String senha = txtSenha.isVisible() ? txtSenha.getText() : txtSenhaVisivel.getText();
                 String cargo = txtCargo.getText() != null ? txtCargo.getText().trim() : "Secretaria";
 
                 if (nome.isEmpty() || email.isEmpty() || senha == null || senha.isEmpty()) {
@@ -663,7 +869,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 lblNovoTit,
                 new Label("Nome Completo:"), txtNome,
                 new Label("Email de Login:"), txtEmail,
-                new Label("Senha:"), txtSenha,
+                new Label("Senha:"), boxSenhaAdmin,
                 new Label("Cargo:"), txtCargo,
                 btnCriar
         );

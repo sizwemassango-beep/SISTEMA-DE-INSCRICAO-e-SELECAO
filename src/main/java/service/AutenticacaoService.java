@@ -54,7 +54,7 @@ public class AutenticacaoService {
         }
 
         String emailLimpo = email.trim();
-        String senhaLimpa = senha.trim();
+        String senhaLimpa = senha;
 
         try {
             // 1. Verifica se é Administrador / Secretaria

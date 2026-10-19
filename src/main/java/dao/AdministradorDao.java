@@ -41,7 +41,7 @@ public class AdministradorDao implements Tabela<Administrador> {
 
     @Override
     public void salvar(Administrador administrador) {
-        String sqlU = "INSERT INTO utilizador (nome, email, senha) VALUES (?, ?, ?)";
+        String sqlU = "INSERT INTO utilizador (nome, email, senha, perfil) VALUES (?, ?, ?, 'Administrador')";
         String sqlA = "INSERT INTO administrador (id, cargo) VALUES (?, ?)";
 
         try (Connection conn = conexao.getConexao()) {

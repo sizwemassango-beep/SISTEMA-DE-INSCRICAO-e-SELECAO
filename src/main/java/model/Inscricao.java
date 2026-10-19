@@ -7,6 +7,8 @@ package model;
 import java.time.LocalDate;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
+
 /**
  *
  * @author Sizwe Massango
@@ -14,10 +16,20 @@ import java.util.Objects;
 public class Inscricao {
     protected Long id;
     protected Candidato candidato;
+    protected Long cursoId;
+    protected String cursoNome;
+    protected Curso curso;
     protected double nota;
-    protected StatusInscricao status;
+    protected StatusInscricao status = StatusInscricao.PENDENTE;
     protected LocalDate dataInscricao;
+    protected boolean documentosSubmetidos;
     protected boolean documentosValidados;
+    protected String docIdentificacao;
+    protected String docCertificado10;
+    protected String docCertificado12OuRecibo;
+    protected String tipoComprovativo12 = "Certificado de Conclusão";
+    protected String cartaMotivacao;
+    protected String motivoRejeicao;
 
     public Long getId() {
         return id;
@@ -33,6 +45,34 @@ public class Inscricao {
 
     public void setCandidato(Candidato candidato) {
         this.candidato = candidato;
+    }
+
+    public Long getCursoId() {
+        return cursoId;
+    }
+
+    public void setCursoId(Long cursoId) {
+        this.cursoId = cursoId;
+    }
+
+    public String getCursoNome() {
+        return cursoNome;
+    }
+
+    public void setCursoNome(String cursoNome) {
+        this.cursoNome = cursoNome;
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
+        if (curso != null) {
+            this.cursoId = curso.getId();
+            this.cursoNome = curso.getNome();
+        }
     }
 
     public double getNota() {
@@ -59,6 +99,14 @@ public class Inscricao {
         this.dataInscricao = dataInscricao;
     }
 
+    public boolean isDocumentosSubmetidos() {
+        return documentosSubmetidos;
+    }
+
+    public void setDocumentosSubmetidos(boolean documentosSubmetidos) {
+        this.documentosSubmetidos = documentosSubmetidos;
+    }
+
     public boolean isDocumentosValidados() {
         return documentosValidados;
     }
@@ -67,14 +115,64 @@ public class Inscricao {
         this.documentosValidados = documentosValidados;
     }
 
-    public void aprovar(){
-
+    public String getDocIdentificacao() {
+        return docIdentificacao;
     }
-    public void colccarListaEsoera(){
 
+    public void setDocIdentificacao(String docIdentificacao) {
+        this.docIdentificacao = docIdentificacao;
     }
-    public void reprovar(){
 
+    public String getDocCertificado10() {
+        return docCertificado10;
+    }
+
+    public void setDocCertificado10(String docCertificado10) {
+        this.docCertificado10 = docCertificado10;
+    }
+
+    public String getDocCertificado12OuRecibo() {
+        return docCertificado12OuRecibo;
+    }
+
+    public void setDocCertificado12OuRecibo(String docCertificado12OuRecibo) {
+        this.docCertificado12OuRecibo = docCertificado12OuRecibo;
+    }
+
+    public String getTipoComprovativo12() {
+        return tipoComprovativo12;
+    }
+
+    public void setTipoComprovativo12(String tipoComprovativo12) {
+        this.tipoComprovativo12 = tipoComprovativo12;
+    }
+
+    public String getCartaMotivacao() {
+        return cartaMotivacao;
+    }
+
+    public void setCartaMotivacao(String cartaMotivacao) {
+        this.cartaMotivacao = cartaMotivacao;
+    }
+
+    public String getMotivoRejeicao() {
+        return motivoRejeicao;
+    }
+
+    public void setMotivoRejeicao(String motivoRejeicao) {
+        this.motivoRejeicao = motivoRejeicao;
+    }
+
+    public void aprovar() {
+        this.status = StatusInscricao.APROVADO;
+    }
+
+    public void colccarListaEsoera() {
+        this.status = StatusInscricao.LISTA_ESPERA;
+    }
+
+    public void reprovar() {
+        this.status = StatusInscricao.NAO_APROVADO;
     }
 
     @Override
@@ -94,9 +192,11 @@ public class Inscricao {
         return "Inscricao{" +
                 "id=" + id +
                 ", candidato=" + candidato +
+                ", cursoNome='" + cursoNome + '\'' +
                 ", nota=" + nota +
                 ", status=" + status +
                 ", dataInscricao=" + dataInscricao +
+                ", documentosSubmetidos=" + documentosSubmetidos +
                 ", documentosValidados=" + documentosValidados +
                 '}';
     }

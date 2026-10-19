@@ -6,9 +6,9 @@ import java.sql.SQLException;
 
 public class ConexaoBD {
 
-    private static final String URL = "jdbc:mysql://172.24.20.32/sis?serverTimezone=Africa/Maputo";
-    private static final String USER = "vilker";
-    private static final String PASS = "S123";
+    private static final String URL = "jdbc:mysql://localhost:3306/sis?useSSL=false&serverTimezone=UTC";
+    private static final String USER = "root";
+    private static final String PASS = "";
 
     public Connection getConexao() {
         try {

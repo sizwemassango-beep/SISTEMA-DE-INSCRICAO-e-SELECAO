@@ -118,9 +118,33 @@ public class TelaLoginFX extends BorderPane {
         VBox boxSenha = new VBox(6);
         Label lblSenha = new Label("Palavra-passe / Senha");
         lblSenha.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
+
         txtSenha = new PasswordField();
         txtSenha.setPromptText("Introduza a sua senha");
-        boxSenha.getChildren().addAll(lblSenha, txtSenha);
+        TextField txtSenhaVisivel = new TextField();
+        txtSenhaVisivel.setPromptText("Introduza a sua senha");
+        txtSenhaVisivel.setVisible(false);
+        txtSenhaVisivel.setManaged(false);
+        txtSenha.textProperty().bindBidirectional(txtSenhaVisivel.textProperty());
+        Button btnVerSenha = new Button("👁");
+        btnVerSenha.setStyle("-fx-background-color: transparent; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 6px 8px;");
+        btnVerSenha.setTooltip(new Tooltip("Mostrar / Ocultar senha"));
+        btnVerSenha.setOnAction(ev -> {
+            boolean mostrar = !txtSenhaVisivel.isVisible();
+            txtSenhaVisivel.setVisible(mostrar);
+            txtSenhaVisivel.setManaged(mostrar);
+            txtSenha.setVisible(!mostrar);
+            txtSenha.setManaged(!mostrar);
+        });
+        HBox boxCampoSenha = new HBox(4, txtSenha, txtSenhaVisivel, btnVerSenha);
+        HBox.setHgrow(txtSenha, Priority.ALWAYS);
+        HBox.setHgrow(txtSenhaVisivel, Priority.ALWAYS);
+        boxCampoSenha.setAlignment(Pos.CENTER_LEFT);
+
+        txtSenha.setOnAction(e -> executarLogin());
+        txtSenhaVisivel.setOnAction(e -> executarLogin());
+
+        boxSenha.getChildren().addAll(lblSenha, boxCampoSenha);
 
         lblMensagem = new Label();
         lblMensagem.setWrapText(true);
@@ -131,15 +155,19 @@ public class TelaLoginFX extends BorderPane {
         btnEntrar.setMaxWidth(Double.MAX_VALUE);
         btnEntrar.setOnAction(e -> executarLogin());
 
-        txtSenha.setOnAction(e -> executarLogin());
         txtEmail.setOnAction(e -> txtSenha.requestFocus());
+
+        Button btnNovoCadastro = new Button("Não tem conta? Criar Conta de Candidato →");
+        btnNovoCadastro.setStyle("-fx-background-color: transparent; -fx-text-fill: -fx-accent-color; -fx-font-weight: 600; -fx-cursor: hand; -fx-font-size: 13px;");
+        btnNovoCadastro.setMaxWidth(Double.MAX_VALUE);
+        btnNovoCadastro.setOnAction(e -> Navegador.irParaNovaInscricao());
 
         Button btnVoltar = new Button("← Voltar ao Início");
         btnVoltar.getStyleClass().add("button-secondary");
         btnVoltar.setMaxWidth(Double.MAX_VALUE);
         btnVoltar.setOnAction(e -> Navegador.irParaTelaInicial());
 
-        formCard.getChildren().addAll(lblFormTitulo, lblFormSub, seletorPerfil, boxEmail, boxSenha, lblMensagem, btnEntrar, btnVoltar);
+        formCard.getChildren().addAll(lblFormTitulo, lblFormSub, seletorPerfil, boxEmail, boxSenha, lblMensagem, btnEntrar, btnNovoCadastro, btnVoltar);
         formularioBox.getChildren().add(formCard);
 
         container.getChildren().addAll(banner, formularioBox);
@@ -172,7 +200,7 @@ public class TelaLoginFX extends BorderPane {
         } else {
             Optional<Candidato> optCandidato = loginController.autenticarCandidato(email, senha);
             if (optCandidato.isPresent()) {
-                exibirAreaCandidato(optCandidato.get());
+                Navegador.irParaDashboardCandidato(optCandidato.get());
             } else {
                 mostrarMensagem("Candidato não encontrado com este email e senha.", false);
             }

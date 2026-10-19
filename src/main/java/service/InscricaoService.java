@@ -5,6 +5,7 @@ import dao.ConexaoBD;
 import dao.InscricaoDao;
 import dao.QuestionarioCarenciaDao;
 import model.Candidato;
+import model.Curso;
 import model.Inscricao;
 import model.QuestionarioCarencia;
 import model.StatusInscricao;
@@ -26,6 +27,10 @@ public class InscricaoService {
     }
 
     public void processarNovaInscricao(Candidato candidato, QuestionarioCarencia questionario) throws IllegalArgumentException {
+        processarNovaInscricao(candidato, questionario, null);
+    }
+
+    public void processarNovaInscricao(Candidato candidato, QuestionarioCarencia questionario, Curso curso) throws IllegalArgumentException {
         if (candidato.getNomeCompleto() == null || candidato.getNomeCompleto().trim().isEmpty()) {
             throw new IllegalArgumentException("O nome completo é obrigatório.");
         }
@@ -62,7 +67,11 @@ public class InscricaoService {
             inscricao.setDataInscricao(LocalDate.now());
             inscricao.setStatus(StatusInscricao.PENDENTE);
             inscricao.setNota(questionario != null ? questionario.calcularPontuacao() : 0.0);
+            inscricao.setDocumentosSubmetidos(false);
             inscricao.setDocumentosValidados(false);
+            if (curso != null) {
+                inscricao.setCurso(curso);
+            }
             inscricaoDao.salvar(inscricao);
             candidato.adicionarInscricao(inscricao);
         }

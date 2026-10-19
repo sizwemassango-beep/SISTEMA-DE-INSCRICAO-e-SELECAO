@@ -1,15 +1,11 @@
 package dao;
 
 import model.Candidato;
+import model.Curso;
 import model.Inscricao;
 import model.StatusInscricao;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +15,12 @@ public class InscricaoDao implements Tabela<Inscricao> {
 
     private final ConexaoBD conexao;
     private final CandidatoDao candidatoDao;
+    private final CursoDao cursoDao;
 
     public InscricaoDao(ConexaoBD conexao) {
         this.conexao = conexao;
         this.candidatoDao = new CandidatoDao(conexao);
+        this.cursoDao = new CursoDao(conexao);
     }
 
     @Override
@@ -30,10 +28,19 @@ public class InscricaoDao implements Tabela<Inscricao> {
         String sql = "CREATE TABLE IF NOT EXISTS inscricao ("
                 + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                 + "candidato_id BIGINT NOT NULL, "
+                + "curso_id BIGINT, "
+                + "curso_nome VARCHAR(150) NOT NULL DEFAULT '', "
                 + "nota DOUBLE NOT NULL DEFAULT 0.0, "
                 + "status VARCHAR(30) NOT NULL DEFAULT 'PENDENTE', "
                 + "data_inscricao DATE NOT NULL, "
+                + "documentos_submetidos BOOLEAN NOT NULL DEFAULT FALSE, "
                 + "documentos_validados BOOLEAN NOT NULL DEFAULT FALSE, "
+                + "doc_identificacao VARCHAR(255), "
+                + "doc_certificado10 VARCHAR(255), "
+                + "doc_certificado12_ou_recibo VARCHAR(255), "
+                + "tipo_comprovativo12 VARCHAR(50) DEFAULT 'Certificado de Conclusão', "
+                + "carta_motivacao TEXT, "
+                + "motivo_rejeicao VARCHAR(255), "
                 + "FOREIGN KEY (candidato_id) REFERENCES candidato(id) ON DELETE CASCADE)";
 
         try (Connection conn = conexao.getConexao();
@@ -47,13 +54,15 @@ public class InscricaoDao implements Tabela<Inscricao> {
     @Override
     public void salvar(Inscricao inscricao) {
         validar(inscricao);
-        String sql = "INSERT INTO inscricao (candidato_id, nota, status, data_inscricao, documentos_validados) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO inscricao (candidato_id, curso_id, curso_nome, nota, status, data_inscricao, "
+                + "documentos_submetidos, documentos_validados, doc_identificacao, doc_certificado10, "
+                + "doc_certificado12_ou_recibo, tipo_comprovativo12, carta_motivacao, motivo_rejeicao) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = conexao.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            preencher(ps, inscricao);
+            preencherCompleto(ps, inscricao);
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -100,6 +109,19 @@ public class InscricaoDao implements Tabela<Inscricao> {
         }
     }
 
+    public void atualizarStatusComMotivo(Long id, StatusInscricao status, String motivoRejeicao) {
+        String sql = "UPDATE inscricao SET status = ?, motivo_rejeicao = ? WHERE id = ?";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ps.setString(2, motivoRejeicao);
+            ps.setLong(3, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar status da inscrição", e);
+        }
+    }
+
     public void atualizarNota(Long id, double nota) {
         String sql = "UPDATE inscricao SET nota = ? WHERE id = ?";
         try (Connection conn = conexao.getConexao();
@@ -121,6 +143,26 @@ public class InscricaoDao implements Tabela<Inscricao> {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar validação de documentos", e);
+        }
+    }
+
+    public void submeterDocumentos(Long inscricaoId, String docIdentificacao, String docCertificado10,
+                                   String docCertificado12OuRecibo, String tipoComprovativo12,
+                                   String cartaMotivacao) {
+        String sql = "UPDATE inscricao SET doc_identificacao = ?, doc_certificado10 = ?, "
+                + "doc_certificado12_ou_recibo = ?, tipo_comprovativo12 = ?, carta_motivacao = ?, "
+                + "documentos_submetidos = TRUE WHERE id = ?";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, docIdentificacao);
+            ps.setString(2, docCertificado10);
+            ps.setString(3, docCertificado12OuRecibo);
+            ps.setString(4, tipoComprovativo12 != null ? tipoComprovativo12 : "Certificado de Conclusão");
+            ps.setString(5, cartaMotivacao);
+            ps.setLong(6, inscricaoId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao submeter documentos", e);
         }
     }
 
@@ -159,14 +201,16 @@ public class InscricaoDao implements Tabela<Inscricao> {
         if (inscricao.getId() == null) {
             throw new IllegalArgumentException("Inscrição sem ID para atualizar.");
         }
-        String sql = "UPDATE inscricao SET candidato_id = ?, nota = ?, status = ?, "
-                + "data_inscricao = ?, documentos_validados = ? WHERE id = ?";
+        String sql = "UPDATE inscricao SET candidato_id = ?, curso_id = ?, curso_nome = ?, nota = ?, status = ?, "
+                + "data_inscricao = ?, documentos_submetidos = ?, documentos_validados = ?, doc_identificacao = ?, "
+                + "doc_certificado10 = ?, doc_certificado12_ou_recibo = ?, tipo_comprovativo12 = ?, "
+                + "carta_motivacao = ?, motivo_rejeicao = ? WHERE id = ?";
 
         try (Connection conn = conexao.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            preencher(ps, inscricao);
-            ps.setLong(6, inscricao.getId());
+            preencherCompleto(ps, inscricao);
+            ps.setLong(15, inscricao.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar inscrição", e);
@@ -203,12 +247,25 @@ public class InscricaoDao implements Tabela<Inscricao> {
         }
     }
 
-    private void preencher(PreparedStatement ps, Inscricao inscricao) throws SQLException {
+    private void preencherCompleto(PreparedStatement ps, Inscricao inscricao) throws SQLException {
         ps.setLong(1, inscricao.getCandidato().getId());
-        ps.setDouble(2, inscricao.getNota());
-        ps.setString(3, inscricao.getStatus().name());
-        ps.setDate(4, Date.valueOf(inscricao.getDataInscricao()));
-        ps.setBoolean(5, inscricao.isDocumentosValidados());
+        if (inscricao.getCursoId() != null) {
+            ps.setLong(2, inscricao.getCursoId());
+        } else {
+            ps.setNull(2, Types.BIGINT);
+        }
+        ps.setString(3, inscricao.getCursoNome() != null ? inscricao.getCursoNome() : "");
+        ps.setDouble(4, inscricao.getNota());
+        ps.setString(5, inscricao.getStatus().name());
+        ps.setDate(6, Date.valueOf(inscricao.getDataInscricao()));
+        ps.setBoolean(7, inscricao.isDocumentosSubmetidos());
+        ps.setBoolean(8, inscricao.isDocumentosValidados());
+        ps.setString(9, inscricao.getDocIdentificacao());
+        ps.setString(10, inscricao.getDocCertificado10());
+        ps.setString(11, inscricao.getDocCertificado12OuRecibo());
+        ps.setString(12, inscricao.getTipoComprovativo12() != null ? inscricao.getTipoComprovativo12() : "Certificado de Conclusão");
+        ps.setString(13, inscricao.getCartaMotivacao());
+        ps.setString(14, inscricao.getMotivoRejeicao());
     }
 
     private Optional<Inscricao> buscarUnico(String sql, Long parametro) {
@@ -252,7 +309,18 @@ public class InscricaoDao implements Tabela<Inscricao> {
         Optional<Candidato> candOpt = candidatoDao.buscarId(candidatoId);
         candOpt.ifPresent(inscricao::setCandidato);
 
+        try {
+            long cid = rs.getLong("curso_id");
+            if (!rs.wasNull()) {
+                inscricao.setCursoId(cid);
+                cursoDao.buscarId(cid).ifPresent(inscricao::setCurso);
+            }
+        } catch (SQLException ignored) {}
+
+        try { inscricao.setCursoNome(rs.getString("curso_nome")); } catch (SQLException ignored) {}
+
         inscricao.setNota(rs.getDouble("nota"));
+
         String statusStr = rs.getString("status");
         if (statusStr != null) {
             try {
@@ -266,7 +334,16 @@ public class InscricaoDao implements Tabela<Inscricao> {
         if (dataDb != null) {
             inscricao.setDataInscricao(dataDb.toLocalDate());
         }
+
+        try { inscricao.setDocumentosSubmetidos(rs.getBoolean("documentos_submetidos")); } catch (SQLException ignored) {}
         inscricao.setDocumentosValidados(rs.getBoolean("documentos_validados"));
+
+        try { inscricao.setDocIdentificacao(rs.getString("doc_identificacao")); } catch (SQLException ignored) {}
+        try { inscricao.setDocCertificado10(rs.getString("doc_certificado10")); } catch (SQLException ignored) {}
+        try { inscricao.setDocCertificado12OuRecibo(rs.getString("doc_certificado12_ou_recibo")); } catch (SQLException ignored) {}
+        try { inscricao.setTipoComprovativo12(rs.getString("tipo_comprovativo12")); } catch (SQLException ignored) {}
+        try { inscricao.setCartaMotivacao(rs.getString("carta_motivacao")); } catch (SQLException ignored) {}
+        try { inscricao.setMotivoRejeicao(rs.getString("motivo_rejeicao")); } catch (SQLException ignored) {}
 
         return inscricao;
     }

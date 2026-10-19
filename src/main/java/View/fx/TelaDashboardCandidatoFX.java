@@ -12,6 +12,13 @@ import model.QuestionarioCarencia;
 import model.StatusInscricao;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -23,10 +30,11 @@ public class TelaDashboardCandidatoFX extends BorderPane {
     private Inscricao inscricaoAtual;
     private QuestionarioCarencia carenciaAtual;
 
-    private VBox boxStatusContainer;
     private Label lblStatusBadge;
     private Label lblStatusDescricao;
     private VBox boxConteudoDinamico;
+
+    private static final String PASTA_DOCS = System.getProperty("user.home") + File.separator + "SIS_Documentos";
 
     public TelaDashboardCandidatoFX(Candidato candidato) {
         this.candidato = candidato;
@@ -47,6 +55,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
         scrollPane.setContent(criarCorpoPrincipal());
         setCenter(scrollPane);
     }
@@ -102,13 +111,9 @@ public class TelaDashboardCandidatoFX extends BorderPane {
     private void renderizarCards() {
         boxConteudoDinamico.getChildren().clear();
 
-        // 1. Cartão de Boas-Vindas e Status Geral
         VBox cardHero = criarCardHeroStatus();
-
-        // 2. Esteira do Processo Seletivo (Progresso Visual)
         VBox cardProgresso = criarCardProgresso();
 
-        // 3. Informações em duas colunas (Dados Pessoais e Carência Socioeconómica)
         HBox boxDuasColunas = new HBox(20);
         boxDuasColunas.setAlignment(Pos.TOP_LEFT);
 
@@ -120,10 +125,10 @@ public class TelaDashboardCandidatoFX extends BorderPane {
 
         boxDuasColunas.getChildren().addAll(cardDadosPessoais, cardSocioeconomico);
 
-        // 4. Cartão de Ações e Exportação em PDF
+        VBox cardDocumentos = criarCardDocumentos();
         VBox cardAcoes = criarCardAcoes();
 
-        boxConteudoDinamico.getChildren().addAll(cardHero, cardProgresso, boxDuasColunas, cardAcoes);
+        boxConteudoDinamico.getChildren().addAll(cardHero, cardProgresso, boxDuasColunas, cardDocumentos, cardAcoes);
     }
 
     private VBox criarCardHeroStatus() {
@@ -192,8 +197,11 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         switch (st) {
             case APROVADO -> lblStatusDescricao.setText("Parabéns! A sua candidatura foi APROVADA pela comissão de seleção. Descarregue o seu comprovativo oficial abaixo e dirija-se à secretaria académica para efetuar a matrícula.");
             case LISTA_ESPERA -> lblStatusDescricao.setText("A sua candidatura foi avaliada e encontra-se em LISTA DE ESPERA. Em caso de desistências ou novas vagas, a secretaria entrará em contacto pelos meios indicados.");
-            case NAO_APROVADO -> lblStatusDescricao.setText("Agradecemos a sua participação. A sua candidatura não foi classificada no número de vagas disponibilizadas para este ciclo.");
-            default -> lblStatusDescricao.setText("A sua candidatura foi registada com sucesso na base de dados e está AGUARDANDO HOMOLOGAÇÃO da Secretaria. Fique atento a esta página para novidades.");
+            case NAO_APROVADO -> {
+                String motivo = inscricaoAtual != null && inscricaoAtual.getMotivoRejeicao() != null ? " Motivo: " + inscricaoAtual.getMotivoRejeicao() : "";
+                lblStatusDescricao.setText("Agradecemos a sua participação. A sua candidatura não foi classificada no número de vagas disponibilizadas para este ciclo." + motivo);
+            }
+            default -> lblStatusDescricao.setText("A sua candidatura foi registada com sucesso e está AGUARDANDO HOMOLOGAÇÃO da Secretaria. Submeta os seus documentos abaixo para agilizar o processo.");
         }
     }
 
@@ -207,16 +215,23 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         HBox esteira = new HBox(12);
         esteira.setAlignment(Pos.CENTER);
 
+        boolean docsSubmetidos = inscricaoAtual != null && inscricaoAtual.isDocumentosSubmetidos();
         boolean docsValidados = inscricaoAtual != null && inscricaoAtual.isDocumentosValidados();
         StatusInscricao st = inscricaoAtual != null ? inscricaoAtual.getStatus() : StatusInscricao.PENDENTE;
 
         VBox passo1 = criarItemPasso("1. Inscrição", "Submetida com sucesso", true, "✔");
         Separator sep1 = criarSeparadorPasso();
-        VBox passo2 = criarItemPasso("2. Documentos", docsValidados ? "Validados pela Secretaria" : "Em Verificação", docsValidados, docsValidados ? "✔" : "⏳");
+        VBox passo2 = criarItemPasso("2. Documentos",
+                docsValidados ? "Validados pela Secretaria" : (docsSubmetidos ? "Submetidos – Em Verificação" : "Aguardando Submissão"),
+                docsSubmetidos, docsValidados ? "✔" : (docsSubmetidos ? "⏳" : "○"));
         Separator sep2 = criarSeparadorPasso();
-        VBox passo3 = criarItemPasso("3. Carência Social", carenciaAtual != null ? carenciaAtual.calcularPontuacao() + " pts (" + carenciaAtual.classificar().getDescricao() + ")" : "Aguardando cálculo", carenciaAtual != null, carenciaAtual != null ? "✔" : "○");
+        VBox passo3 = criarItemPasso("3. Carência Social",
+                carenciaAtual != null ? carenciaAtual.calcularPontuacao() + " pts (" + carenciaAtual.classificar().getDescricao() + ")" : "Aguardando cálculo",
+                carenciaAtual != null, carenciaAtual != null ? "✔" : "○");
         Separator sep3 = criarSeparadorPasso();
-        VBox passo4 = criarItemPasso("4. Homologação", st != StatusInscricao.PENDENTE ? st.getDescricao() : "Em Análise", st != StatusInscricao.PENDENTE, st == StatusInscricao.APROVADO ? "✔" : (st == StatusInscricao.PENDENTE ? "⏳" : "•"));
+        VBox passo4 = criarItemPasso("4. Homologação",
+                st != StatusInscricao.PENDENTE ? st.getDescricao() : "Em Análise",
+                st != StatusInscricao.PENDENTE, st == StatusInscricao.APROVADO ? "✔" : (st == StatusInscricao.PENDENTE ? "⏳" : "•"));
 
         HBox.setHgrow(passo1, Priority.ALWAYS);
         HBox.setHgrow(passo2, Priority.ALWAYS);
@@ -285,6 +300,10 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         adicionarLinhaInfo(grid, linha++, "Distrito:", candidato != null && candidato.getDistrito() != null ? candidato.getDistrito() : "-");
         adicionarLinhaInfo(grid, linha++, "Morada:", candidato != null && candidato.getMorada() != null ? candidato.getMorada() : "-");
 
+        if (inscricaoAtual != null && inscricaoAtual.getCursoNome() != null && !inscricaoAtual.getCursoNome().isEmpty()) {
+            adicionarLinhaInfo(grid, linha, "Curso Pretendido:", inscricaoAtual.getCursoNome());
+        }
+
         card.getChildren().addAll(lblTit, new Separator(), grid);
         return card;
     }
@@ -321,25 +340,207 @@ public class TelaDashboardCandidatoFX extends BorderPane {
             grid.add(new Label("Regime de Admissão:"), 0, linha);
             grid.add(lblCotas, 1, linha);
         } else {
-            Label lblSemQuestionario = new Label("Nenhum questionário socioeconómico preenchido para este registo.");
-            lblSemQuestionario.setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-style: italic;");
-            grid.add(lblSemQuestionario, 0, 0, 2, 1);
+            Label lblSemQ = new Label("Nenhum questionário socioeconómico preenchido para este registo.");
+            lblSemQ.setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-style: italic;");
+            grid.add(lblSemQ, 0, 0, 2, 1);
         }
 
         card.getChildren().addAll(lblTit, new Separator(), grid);
         return card;
     }
 
-    private void adicionarLinhaInfo(GridPane grid, int linha, String rotulo, String valor) {
-        Label lblR = new Label(rotulo);
-        lblR.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-secondary;");
+    private VBox criarCardDocumentos() {
+        VBox card = new VBox(16);
+        card.getStyleClass().add("card");
 
-        Label lblV = new Label(valor != null && !valor.isEmpty() ? valor : "-");
-        lblV.setStyle("-fx-font-size: 13px; -fx-text-fill: -fx-text-primary;");
-        lblV.setWrapText(true);
+        Label lblTit = new Label("Documentos de Identificação e Habilitações");
+        lblTit.getStyleClass().add("card-title");
 
-        grid.add(lblR, 0, linha);
-        grid.add(lblV, 1, linha);
+        boolean jaSubmetidos = inscricaoAtual != null && inscricaoAtual.isDocumentosSubmetidos();
+
+        if (jaSubmetidos) {
+            GridPane gridDocs = new GridPane();
+            gridDocs.setHgap(16);
+            gridDocs.setVgap(10);
+
+            adicionarLinhaInfo(gridDocs, 0, "Doc. Identificação (BI):",
+                    inscricaoAtual.getDocIdentificacao() != null ? "✔ " + Paths.get(inscricaoAtual.getDocIdentificacao()).getFileName() : "—");
+            adicionarLinhaInfo(gridDocs, 1, "Certificado 10ª Classe:",
+                    inscricaoAtual.getDocCertificado10() != null ? "✔ " + Paths.get(inscricaoAtual.getDocCertificado10()).getFileName() : "—");
+            adicionarLinhaInfo(gridDocs, 2,
+                    (inscricaoAtual.getTipoComprovativo12() != null ? inscricaoAtual.getTipoComprovativo12() : "Doc. 12ª Classe") + ":",
+                    inscricaoAtual.getDocCertificado12OuRecibo() != null ? "✔ " + Paths.get(inscricaoAtual.getDocCertificado12OuRecibo()).getFileName() : "—");
+
+            boolean validados = inscricaoAtual.isDocumentosValidados();
+            Label lblEstado = new Label(validados ? "✔ Documentos verificados pela Secretaria" : "⏳ Documentos em análise pela Secretaria");
+            lblEstado.setStyle("-fx-font-weight: bold; -fx-text-fill: " + (validados ? "#15803D" : "#D97706") + "; -fx-font-size: 13px;");
+
+            VBox boxInfo = new VBox(6, gridDocs, lblEstado);
+
+            Button btnResubmeter = new Button("🔄 Substituir Documentos");
+            btnResubmeter.getStyleClass().add("button-secondary");
+            btnResubmeter.setOnAction(e -> mostrarFormularioDocumentos(card));
+
+            card.getChildren().addAll(lblTit, new Separator(), boxInfo, btnResubmeter);
+        } else {
+            Label lblInstrucoes = new Label(
+                    "Para avançar no processo seletivo, submeta os seguintes documentos digitalizados (PDF, JPG ou PNG):\n"
+                    + "  1. Bilhete de Identidade (frente e verso)\n"
+                    + "  2. Certificado de conclusão da 10ª classe\n"
+                    + "  3. Certificado da 12ª classe OU Recibo de solicitação do certificado"
+            );
+            lblInstrucoes.setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-size: 13px;");
+            lblInstrucoes.setWrapText(true);
+
+            Button btnSubmeter = new Button("📎 Submeter Documentos Agora");
+            btnSubmeter.getStyleClass().add("button-primary");
+            btnSubmeter.setOnAction(e -> mostrarFormularioDocumentos(card));
+
+            card.getChildren().addAll(lblTit, new Separator(), lblInstrucoes, btnSubmeter);
+        }
+
+        return card;
+    }
+
+    private void mostrarFormularioDocumentos(VBox cardDocumentos) {
+        if (inscricaoAtual == null) {
+            mostrarAlertaErro("Não foi possível identificar a inscrição.");
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Submeter Documentos de Candidatura");
+        dialog.setHeaderText("Anexe os ficheiros digitalizados solicitados");
+        dialog.getDialogPane().setMinWidth(560);
+
+        VBox conteudo = new VBox(16);
+        conteudo.setPadding(new Insets(16));
+
+        Label[] lblDocBI = {new Label("Nenhum ficheiro seleccionado")};
+        Label[] lblDoc10 = {new Label("Nenhum ficheiro seleccionado")};
+        Label[] lblDoc12 = {new Label("Nenhum ficheiro seleccionado")};
+        File[] fBI = {null};
+        File[] f10 = {null};
+        File[] f12 = {null};
+
+        conteudo.getChildren().addAll(
+                criarLinhaUpload("BI (frente e verso) *", lblDocBI, fBI),
+                criarLinhaUpload("Certificado 10ª Classe *", lblDoc10, f10)
+        );
+
+        ToggleGroup grpTipo = new ToggleGroup();
+        RadioButton rbCert = new RadioButton("Certificado de Conclusão");
+        RadioButton rbRecibo = new RadioButton("Recibo de Solicitação");
+        rbCert.setToggleGroup(grpTipo);
+        rbRecibo.setToggleGroup(grpTipo);
+        rbCert.setSelected(true);
+        rbCert.setStyle("-fx-text-fill: -fx-text-primary;");
+        rbRecibo.setStyle("-fx-text-fill: -fx-text-primary;");
+
+        HBox boxTipo = new HBox(16, rbCert, rbRecibo);
+        boxTipo.setAlignment(Pos.CENTER_LEFT);
+
+        VBox boxDoc12 = new VBox(6);
+        Label lblTipoCert = new Label("Comprovativo da 12ª Classe *");
+        lblTipoCert.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
+        boxDoc12.getChildren().addAll(lblTipoCert, boxTipo, criarLinhaUpload("Ficheiro", lblDoc12, f12));
+        conteudo.getChildren().add(boxDoc12);
+
+        TextArea txtMotivacao = new TextArea();
+        txtMotivacao.setPromptText("Carta de motivação (opcional) — máximo 500 caracteres");
+        txtMotivacao.setMaxHeight(100);
+        txtMotivacao.setPrefRowCount(4);
+        txtMotivacao.setWrapText(true);
+        txtMotivacao.textProperty().addListener((obs, old, novo) -> {
+            if (novo.length() > 500) txtMotivacao.setText(old);
+        });
+
+        VBox boxMotivacao = new VBox(6);
+        Label lblMot = new Label("Carta de Motivação (opcional)");
+        lblMot.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
+        boxMotivacao.getChildren().addAll(lblMot, txtMotivacao);
+        conteudo.getChildren().add(boxMotivacao);
+
+        dialog.getDialogPane().setContent(conteudo);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Button btnOk = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        btnOk.setText("Submeter Documentos");
+        btnOk.getStyleClass().add("button-primary");
+
+        dialog.showAndWait().ifPresent(tipo -> {
+            if (tipo != ButtonType.OK) return;
+
+            if (fBI[0] == null || f10[0] == null || f12[0] == null) {
+                mostrarAlertaErro("Todos os documentos obrigatórios (*) devem ser seleccionados.");
+                return;
+            }
+
+            try {
+                Files.createDirectories(Paths.get(PASTA_DOCS));
+                String prefixo = "cand_" + candidato.getId() + "_";
+                String pathBI = copiarFicheiro(fBI[0], prefixo + "bi");
+                String path10 = copiarFicheiro(f10[0], prefixo + "cert10");
+                String path12 = copiarFicheiro(f12[0], prefixo + (rbCert.isSelected() ? "cert12" : "recibo12"));
+                String tipoDoc12 = rbCert.isSelected() ? "Certificado de Conclusão" : "Recibo de Solicitação";
+
+                controller.submeterDocumentos(
+                        inscricaoAtual.getId(), pathBI, path10, path12, tipoDoc12,
+                        txtMotivacao.getText().trim().isEmpty() ? null : txtMotivacao.getText().trim()
+                );
+
+                carregarDadosBanco();
+                renderizarCards();
+
+                Alert ok = new Alert(Alert.AlertType.INFORMATION);
+                ok.setTitle("Documentos Submetidos");
+                ok.setHeaderText("Sucesso!");
+                ok.setContentText("Os seus documentos foram submetidos e estão a aguardar verificação da Secretaria.");
+                ok.showAndWait();
+
+            } catch (Exception ex) {
+                mostrarAlertaErro("Erro ao submeter documentos: " + ex.getMessage());
+            }
+        });
+    }
+
+    private HBox criarLinhaUpload(String rotulo, Label[] lblNome, File[] ficheiro) {
+        Label lbl = new Label(rotulo);
+        lbl.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary; -fx-min-width: 180px;");
+
+        lblNome[0].setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-size: 12px;");
+
+        Button btnSelecionar = new Button("📁 Seleccionar");
+        btnSelecionar.getStyleClass().add("button-secondary");
+        btnSelecionar.setOnAction(e -> {
+            FileChooser fc = new FileChooser();
+            fc.setTitle("Seleccionar Documento");
+            fc.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Documentos (PDF, Imagem)", "*.pdf", "*.jpg", "*.jpeg", "*.png"),
+                    new FileChooser.ExtensionFilter("Todos os ficheiros", "*.*")
+            );
+            File f = fc.showOpenDialog(Navegador.getPalcoPrincipal());
+            if (f != null) {
+                ficheiro[0] = f;
+                lblNome[0].setText("✔ " + f.getName());
+                lblNome[0].setStyle("-fx-text-fill: #15803D; -fx-font-size: 12px;");
+            }
+        });
+
+        HBox box = new HBox(12, lbl, btnSelecionar, lblNome[0]);
+        box.setAlignment(Pos.CENTER_LEFT);
+        return box;
+    }
+
+    private String copiarFicheiro(File origem, String nomeSemExtensao) throws IOException {
+        String nomeOriginal = origem.getName();
+        String ext = nomeOriginal.contains(".") ? nomeOriginal.substring(nomeOriginal.lastIndexOf('.')) : "";
+        Path destino = Paths.get(PASTA_DOCS, nomeSemExtensao + ext);
+        try (InputStream in = Files.newInputStream(origem.toPath());
+             OutputStream out = Files.newOutputStream(destino)) {
+            in.transferTo(out);
+        }
+        return destino.toString();
     }
 
     private VBox criarCardAcoes() {
@@ -361,7 +562,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Atualização");
             alert.setHeaderText("Dados Atualizados");
-            alert.setContentText("As informações da sua candidatura foram recarregadas com sucesso a partir da base de dados.");
+            alert.setContentText("As informações da sua candidatura foram recarregadas com sucesso.");
             alert.showAndWait();
         });
 
@@ -381,6 +582,18 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         return card;
     }
 
+    private void adicionarLinhaInfo(GridPane grid, int linha, String rotulo, String valor) {
+        Label lblR = new Label(rotulo);
+        lblR.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-secondary;");
+
+        Label lblV = new Label(valor != null && !valor.isEmpty() ? valor : "-");
+        lblV.setStyle("-fx-font-size: 13px; -fx-text-fill: -fx-text-primary;");
+        lblV.setWrapText(true);
+
+        grid.add(lblR, 0, linha);
+        grid.add(lblV, 1, linha);
+    }
+
     private void exportarComprovativoComFileChooser() {
         if (candidato == null) {
             mostrarAlertaErro("Não foi possível identificar o candidato.");
@@ -389,8 +602,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Escolha onde salvar o Comprovativo de Inscrição");
-        String nomeSugerido = "Comprovativo_" + (candidato.getNumeroBI() != null ? candidato.getNumeroBI() : "Inscricao") + ".pdf";
-        fileChooser.setInitialFileName(nomeSugerido);
+        fileChooser.setInitialFileName("Comprovativo_" + (candidato.getNumeroBI() != null ? candidato.getNumeroBI() : "Inscricao") + ".pdf");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Documentos PDF (*.pdf)", "*.pdf"));
 
         File destino = fileChooser.showSaveDialog(getScene() != null ? getScene().getWindow() : null);

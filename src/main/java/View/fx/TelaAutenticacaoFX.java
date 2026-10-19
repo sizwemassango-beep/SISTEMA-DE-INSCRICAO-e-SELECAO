@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import model.Administrador;
 import model.Candidato;
+import model.Curso;
 import model.QuestionarioCarencia;
 import service.AutenticacaoService.ResultadoLogin;
 import service.DatabaseInitializer;
@@ -186,7 +187,31 @@ public class TelaAutenticacaoFX extends BorderPane {
         lblSenha.setStyle("-fx-font-weight: 600; -fx-font-size: 12px;");
         PasswordField txtSenha = new PasswordField();
         txtSenha.setPromptText("Sua palavra-passe");
-        boxSenha.getChildren().addAll(lblSenha, txtSenha);
+
+        TextField txtSenhaVisivel = new TextField();
+        txtSenhaVisivel.setPromptText("Sua palavra-passe");
+        txtSenhaVisivel.setVisible(false);
+        txtSenhaVisivel.setManaged(false);
+        txtSenha.textProperty().bindBidirectional(txtSenhaVisivel.textProperty());
+
+        Button btnOlho = new Button("👁");
+        btnOlho.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 2px 6px;");
+        btnOlho.setOnAction(ev -> {
+            boolean mostrar = !txtSenhaVisivel.isVisible();
+            txtSenha.setVisible(!mostrar);
+            txtSenha.setManaged(!mostrar);
+            txtSenhaVisivel.setVisible(mostrar);
+            txtSenhaVisivel.setManaged(mostrar);
+        });
+
+        HBox boxSenhaRow = new HBox(4, txtSenha, txtSenhaVisivel, btnOlho);
+        boxSenhaRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        HBox.setHgrow(txtSenha, Priority.ALWAYS);
+        HBox.setHgrow(txtSenhaVisivel, Priority.ALWAYS);
+        txtSenha.setMaxWidth(Double.MAX_VALUE);
+        txtSenhaVisivel.setMaxWidth(Double.MAX_VALUE);
+
+        boxSenha.getChildren().addAll(lblSenha, boxSenhaRow);
 
         Button btnEntrar = new Button("Entrar no Sistema");
         btnEntrar.getStyleClass().add("button-primary");
@@ -269,11 +294,64 @@ public class TelaAutenticacaoFX extends BorderPane {
 
         PasswordField txtSenha = new PasswordField();
         txtSenha.setPromptText("Mínimo 6 caracteres");
-        adicionarCampoGrid(grid, "Senha *", txtSenha, 0, 4, 1);
+        TextField txtSenhaVis = new TextField();
+        txtSenhaVis.setPromptText("Mínimo 6 caracteres");
+        txtSenhaVis.setVisible(false);
+        txtSenhaVis.setManaged(false);
+        txtSenha.textProperty().bindBidirectional(txtSenhaVis.textProperty());
+        Button btnOlhoSenha = new Button("👁");
+        btnOlhoSenha.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 2px 6px;");
+        btnOlhoSenha.setOnAction(ev -> {
+            boolean m = !txtSenhaVis.isVisible();
+            txtSenha.setVisible(!m); txtSenha.setManaged(!m);
+            txtSenhaVis.setVisible(m); txtSenhaVis.setManaged(m);
+        });
+        HBox boxSenhaRow = new HBox(4, txtSenha, txtSenhaVis, btnOlhoSenha);
+        boxSenhaRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        HBox.setHgrow(txtSenha, Priority.ALWAYS);
+        HBox.setHgrow(txtSenhaVis, Priority.ALWAYS);
+        txtSenha.setMaxWidth(Double.MAX_VALUE);
+        txtSenhaVis.setMaxWidth(Double.MAX_VALUE);
+        adicionarCampoGrid(grid, "Senha *", boxSenhaRow, 0, 4, 1);
 
         PasswordField txtConfirmar = new PasswordField();
         txtConfirmar.setPromptText("Repita a senha");
-        adicionarCampoGrid(grid, "Confirmar Senha *", txtConfirmar, 1, 4, 1);
+        TextField txtConfirmarVis = new TextField();
+        txtConfirmarVis.setPromptText("Repita a senha");
+        txtConfirmarVis.setVisible(false);
+        txtConfirmarVis.setManaged(false);
+        txtConfirmar.textProperty().bindBidirectional(txtConfirmarVis.textProperty());
+        Button btnOlhoConf = new Button("👁");
+        btnOlhoConf.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 2px 6px;");
+        btnOlhoConf.setOnAction(ev -> {
+            boolean m = !txtConfirmarVis.isVisible();
+            txtConfirmar.setVisible(!m); txtConfirmar.setManaged(!m);
+            txtConfirmarVis.setVisible(m); txtConfirmarVis.setManaged(m);
+        });
+        HBox boxConfRow = new HBox(4, txtConfirmar, txtConfirmarVis, btnOlhoConf);
+        boxConfRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        HBox.setHgrow(txtConfirmar, Priority.ALWAYS);
+        HBox.setHgrow(txtConfirmarVis, Priority.ALWAYS);
+        txtConfirmar.setMaxWidth(Double.MAX_VALUE);
+        txtConfirmarVis.setMaxWidth(Double.MAX_VALUE);
+        adicionarCampoGrid(grid, "Confirmar Senha *", boxConfRow, 1, 4, 1);
+
+        ComboBox<Curso> cbCurso = new ComboBox<>(FXCollections.observableArrayList(inscricaoController.listarCursosDisponiveis()));
+        cbCurso.setMaxWidth(Double.MAX_VALUE);
+        cbCurso.setPromptText("Selecione o Curso Pretendido");
+        cbCurso.setConverter(new javafx.util.StringConverter<>() {
+            @Override
+            public String toString(Curso c) {
+                if (c == null) return "";
+                return c.getNome() + " (" + c.getNumeroVagas() + " vagas)";
+            }
+            @Override
+            public Curso fromString(String string) { return null; }
+        });
+        if (!cbCurso.getItems().isEmpty()) {
+            cbCurso.setValue(cbCurso.getItems().get(0));
+        }
+        adicionarCampoGrid(grid, "Curso Pretendido *", cbCurso, 0, 5, 2);
 
         // --- Seção Questionário de Carência Socioeconómica ---
         Label lblSecaoQuest = new Label("Questionário de Carência Socioeconómica");
@@ -485,12 +563,13 @@ public class TelaAutenticacaoFX extends BorderPane {
                         chkApoio.isSelected()
                 );
 
-                inscricaoController.submeterInscricao(c, q);
+                inscricaoController.submeterInscricao(c, q, cbCurso.getValue());
 
                 mostrarAviso("Candidatura submetida e conta criada com sucesso!", true);
                 Navegador.irParaDashboardCandidato(c);
 
             } catch (Exception ex) {
+                ex.printStackTrace();
                 mostrarAviso("Erro na inscrição: " + ex.getMessage(), false);
             }
         });
@@ -508,6 +587,10 @@ public class TelaAutenticacaoFX extends BorderPane {
     }
 
     private void adicionarCampoGrid(GridPane grid, String rotulo, Control campo, int col, int row, int colSpan) {
+        adicionarCampoGrid(grid, rotulo, (javafx.scene.Node) campo, col, row, colSpan);
+    }
+
+    private void adicionarCampoGrid(GridPane grid, String rotulo, javafx.scene.Node campo, int col, int row, int colSpan) {
         VBox box = new VBox(4);
         Label lbl = new Label(rotulo);
         lbl.setStyle("-fx-font-weight: 600; -fx-font-size: 11px;");

@@ -55,7 +55,7 @@ public class CandidatoDao implements Tabela<Candidato> {
 
     @Override
     public void salvar(Candidato c) {
-        String sqlU = "INSERT INTO utilizador (nome, email, senha) VALUES (?, ?, ?)";
+        String sqlU = "INSERT INTO utilizador (nome, email, senha, perfil) VALUES (?, ?, ?, 'Candidato')";
         String sqlC = "INSERT INTO candidato "
                 + "(id, numero_bi, data_nascimento, telefone, provincia, distrito, morada) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -78,10 +78,10 @@ public class CandidatoDao implements Tabela<Candidato> {
                 psC.setLong(1, c.getId());
                 psC.setString(2, c.getNumeroBI());
                 psC.setDate(3, Date.valueOf(c.getDataDeNascimento()));
-                psC.setString(4, c.getTelefone());
-                psC.setString(5, c.getProvincia());
-                psC.setString(6, c.getDistrito());
-                psC.setString(7, c.getMorada());
+                psC.setString(4, c.getTelefone() != null ? c.getTelefone() : "");
+                psC.setString(5, c.getProvincia() != null ? c.getProvincia() : "");
+                psC.setString(6, c.getDistrito() != null ? c.getDistrito() : "");
+                psC.setString(7, c.getMorada() != null ? c.getMorada() : "");
                 psC.executeUpdate();
 
                 conn.commit();

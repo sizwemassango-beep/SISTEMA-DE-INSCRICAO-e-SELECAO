@@ -6,7 +6,7 @@ package model;
 
 /**
  *
- * @author Sizwe Massango
+ * Classe filha da classe utilizador, representa um dos utilizadores do sistema
  */
 public class Administrador extends Utilizador{
     private String cargo;
@@ -46,6 +46,10 @@ public class Administrador extends Utilizador{
         this.cargo = cargo;
     }
 
+    /**
+     * Metodo para obter todos os dados do administrador
+     * @return
+     */
     @Override
     public String toString() {
         return "Administrador{id=" + getId() + ", nome='" + getNomeCompleto()

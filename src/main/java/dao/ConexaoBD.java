@@ -4,6 +4,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+
+ * Representa ConexaoBD no sistema de inscrição e seleção.
+
+ */
+
 public class ConexaoBD {
 
     private static final String URL = "jdbc:mysql://localhost:3306/sis?useSSL=false&serverTimezone=UTC";

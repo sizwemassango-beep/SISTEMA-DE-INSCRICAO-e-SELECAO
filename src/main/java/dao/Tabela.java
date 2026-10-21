@@ -3,6 +3,12 @@ package dao;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Representa Tabela no sistema de inscrição e seleção.
+
+ */
+
 public interface Tabela<T> {
     void criar(T t);
     void salvar(T t);

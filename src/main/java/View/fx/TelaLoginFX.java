@@ -11,6 +11,12 @@ import service.RelatorioPdfService;
 import java.io.File;
 import java.util.Optional;
 
+/**
+
+ * Representa a interface visual relacionada a TelaLoginFX.
+
+ */
+
 public class TelaLoginFX extends BorderPane {
 
     private final LoginController loginController;
@@ -277,8 +283,10 @@ public class TelaLoginFX extends BorderPane {
         lblMensagem.setVisible(true);
         if (sucesso) {
             lblMensagem.setStyle("-fx-text-fill: #15803D; -fx-font-weight: bold; -fx-background-color: #DCFCE7; -fx-padding: 8px 12px; -fx-background-radius: 6px;");
+            ComponentesVisuais.mostrarPopupToast(lblMensagem, texto, ComponentesVisuais.TipoMensagem.SUCESSO);
         } else {
             lblMensagem.setStyle("-fx-text-fill: #B91C1C; -fx-font-weight: bold; -fx-background-color: #FEE2E2; -fx-padding: 8px 12px; -fx-background-radius: 6px;");
+            ComponentesVisuais.mostrarPopupToast(lblMensagem, texto, ComponentesVisuais.TipoMensagem.ERRO);
         }
     }
 

@@ -10,6 +10,12 @@ import model.Curso;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+
+ * Implementa serviços de aplicação relacionados a Dashboard.
+
+ */
+
 public class DashboardService {
 
     private final CandidatoDao candidatoDao;

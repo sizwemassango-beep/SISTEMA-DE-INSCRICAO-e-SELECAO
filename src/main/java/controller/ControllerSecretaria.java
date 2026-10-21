@@ -4,6 +4,12 @@ import dao.ConexaoBD;
 import service.DashboardService;
 import service.RelatorioPdfService;
 
+/**
+
+ * Representa ControllerSecretaria no sistema de inscrição e seleção.
+
+ */
+
 public abstract class ControllerSecretaria extends ControllerBase {
 
     protected final DashboardService dashboardService;

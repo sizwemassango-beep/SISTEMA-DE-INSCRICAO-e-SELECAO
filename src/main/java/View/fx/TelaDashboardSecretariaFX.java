@@ -21,6 +21,15 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+
+
+ * Representa a interface visual relacionada a TelaDashboardSecretariaFX.
+
+
+ */
+
+
 public class TelaDashboardSecretariaFX extends BorderPane {
 
     private final PainelController controller;
@@ -29,6 +38,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
     private StackPane areaConteudo;
     private ObservableList<Candidato> listaCandidatosObservable;
     private TableView<Candidato> tabelaCandidatos;
+    private TextField txtBusca;
 
     private Button btnMenuPainel;
     private Button btnMenuCandidatos;
@@ -44,6 +54,26 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         this.listaCandidatosObservable = FXCollections.observableArrayList();
         construirInterface();
         carregarDados();
+        configurarAtalhos();
+    }
+
+    public void focarPesquisa() {
+        mostrarGestaoCandidatos();
+        if (txtBusca != null) {
+            javafx.application.Platform.runLater(() -> {
+                txtBusca.requestFocus();
+                txtBusca.selectAll();
+            });
+        }
+    }
+
+    private void configurarAtalhos() {
+        this.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, ev -> {
+            if (ev.isControlDown() && ev.getCode() == javafx.scene.input.KeyCode.P) {
+                focarPesquisa();
+                ev.consume();
+            }
+        });
     }
 
     private void construirInterface() {
@@ -59,39 +89,49 @@ public class TelaDashboardSecretariaFX extends BorderPane {
     private VBox criarSidebar() {
         VBox sidebar = new VBox(8);
         sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(250);
+        sidebar.setPrefWidth(240);
 
         HBox boxMarca = new HBox(12);
         boxMarca.setAlignment(Pos.CENTER_LEFT);
-        boxMarca.setPadding(new Insets(0, 0, 20, 0));
+        boxMarca.setPadding(new Insets(6, 10, 24, 10));
 
-        StackPane logoSidebar = ComponentesVisuais.criarLogoCompacto(44);
+        StackPane logoSidebar = ComponentesVisuais.criarLogoCompacto(38);
 
         VBox titulosSidebar = new VBox(2);
-        Label lblMarca = new Label("Ocean S.A.");
-        lblMarca.getStyleClass().add("sidebar-title");
+        Label lblMarca = new Label("sis.ocean");
+        lblMarca.setStyle("-fx-font-size: 19px; -fx-font-weight: 800; -fx-text-fill: #FFFFFF;");
 
-        Label lblPerfil = new Label("Secretaria Geral");
-        lblPerfil.getStyleClass().add("sidebar-subtitle");
+        Label lblPerfil = new Label("PAINEL ACADÉMICO");
+        lblPerfil.setStyle("-fx-font-size: 9.5px; -fx-font-weight: 700; -fx-text-fill: #2DD4BF; -fx-letter-spacing: 0.5px;");
         titulosSidebar.getChildren().addAll(lblMarca, lblPerfil);
 
         boxMarca.getChildren().addAll(logoSidebar, titulosSidebar);
 
+        Label lblSecGeral = new Label("GESTÃO");
+        lblSecGeral.getStyleClass().add("sidebar-section-header");
+
         btnMenuPainel = criarBotaoMenu("📊 Visão Geral", true, this::mostrarVisaoGeral);
         btnMenuCandidatos = criarBotaoMenu("👥 Candidatos", false, this::mostrarGestaoCandidatos);
         btnMenuCursos = criarBotaoMenu("📚 Cursos & Vagas", false, this::mostrarGestaoCursos);
-        btnMenuUsuarios = criarBotaoMenu("🛡 Utilizadores Secretaria", false, this::mostrarGestaoSecretaria);
-        btnMenuPdf = criarBotaoMenu("📄 Exportar PDF", false, this::mostrarModuloPdf);
+
+        Label lblSecAdmin = new Label("ADMINISTRAÇÃO");
+        lblSecAdmin.getStyleClass().add("sidebar-section-header");
+
+        btnMenuUsuarios = criarBotaoMenu("🛡 Utilizadores", false, this::mostrarGestaoSecretaria);
+        btnMenuPdf = criarBotaoMenu("📄 Relatórios PDF", false, this::mostrarModuloPdf);
 
         Region espacador = new Region();
         VBox.setVgrow(espacador, Priority.ALWAYS);
 
-        Button btnTema = new Button(Navegador.isModoEscuro() ? "☀ Tema Claro" : "🌙 Tema Escuro");
+        Label lblSecConfig = new Label("PREFERÊNCIAS");
+        lblSecConfig.getStyleClass().add("sidebar-section-header");
+
+        Button btnTema = new Button(Navegador.isModoEscuro() ? "☀ Modo Claro" : "🌙 Modo Escuro");
         btnTema.getStyleClass().add("sidebar-button");
         btnTema.setMaxWidth(Double.MAX_VALUE);
         btnTema.setOnAction(e -> {
             Navegador.alternarTema();
-            btnTema.setText(Navegador.isModoEscuro() ? "☀ Tema Claro" : "🌙 Tema Escuro");
+            btnTema.setText(Navegador.isModoEscuro() ? "☀ Modo Claro" : "🌙 Modo Escuro");
         });
 
         Button btnTerminarSessao = new Button("🚪 Terminar Sessão");
@@ -101,12 +141,15 @@ public class TelaDashboardSecretariaFX extends BorderPane {
 
         sidebar.getChildren().addAll(
                 boxMarca,
+                lblSecGeral,
                 btnMenuPainel,
                 btnMenuCandidatos,
                 btnMenuCursos,
+                lblSecAdmin,
                 btnMenuUsuarios,
                 btnMenuPdf,
                 espacador,
+                lblSecConfig,
                 btnTema,
                 btnTerminarSessao
         );
@@ -146,72 +189,102 @@ public class TelaDashboardSecretariaFX extends BorderPane {
     }
 
     private void mostrarVisaoGeral() {
-        VBox box = new VBox(24);
+        VBox box = new VBox(22);
         box.setFillWidth(true);
 
-        // Header da Seção
+        // Header Superior com estética do Mockup (Título + Ações em Pill)
         HBox header = new HBox(16);
         header.setAlignment(Pos.CENTER_LEFT);
 
-        VBox titulos = new VBox(4);
-        Label lblTitulo = new Label("Painel de Controlo da Secretaria");
-        lblTitulo.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary;");
+        VBox titulos = new VBox(2);
+        Label lblTitulo = new Label("Balance information");
+        lblTitulo.setStyle("-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: -fx-text-primary;");
 
-        Label lblSub = new Label("Estatísticas consolidadas e métricas do processo de seleção");
-        lblSub.setStyle("-fx-font-size: 13px; -fx-text-fill: -fx-text-secondary;");
+        Label lblSub = new Label("Painel analítico e distribuição em tempo real das candidaturas");
+        lblSub.setStyle("-fx-font-size: 12.5px; -fx-text-fill: -fx-text-secondary;");
         titulos.getChildren().addAll(lblTitulo, lblSub);
 
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
 
-        Button btnAtualizar = new Button("🔄 Atualizar Indicadores");
-        btnAtualizar.getStyleClass().add("button-secondary");
+        Button btnAtualizar = new Button("+ Atualizar Dados");
+        btnAtualizar.getStyleClass().add("badge-teal-action");
         btnAtualizar.setOnAction(e -> {
             carregarDados();
             mostrarVisaoGeral();
         });
 
-        Button btnExportarGeral = new Button("📥 Baixar Relatório Geral PDF");
-        btnExportarGeral.getStyleClass().add("button-pdf");
+        Button btnExportarGeral = new Button("📥 Relatório PDF");
+        btnExportarGeral.getStyleClass().add("button-secondary");
+        btnExportarGeral.setStyle("-fx-font-size: 12px; -fx-font-weight: 700; -fx-background-radius: 8px; -fx-padding: 7px 14px;");
         btnExportarGeral.setOnAction(e -> exportarPdfGeral());
 
         header.getChildren().addAll(titulos, esp, btnAtualizar, btnExportarGeral);
 
-        // KPIs Reais (sem dados inventados)
+        // Grid com 2 colunas principais (Estilo Layout do Mockup: Coluna Esquerda com Cards de Métricas/Métodos, Coluna Direita com Gráficos e Transações Recentes)
+        HBox layoutColunas = new HBox(22);
+        layoutColunas.setAlignment(Pos.TOP_LEFT);
+
+        // COLUNA ESQUERDA (Cards de Resumo e Ações)
+        VBox colunaEsquerda = new VBox(16);
+        colunaEsquerda.setPrefWidth(310);
+        colunaEsquerda.setMinWidth(290);
+
         int totalCandidatos = controller.obterTotalCandidatos();
         int totalCursos = controller.obterTotalCursos();
         int totalVagas = controller.obterTotalVagas();
         double concorrencia = controller.obterConcorrenciaGeral();
 
-        HBox gridKpis = new HBox(20);
-        gridKpis.setAlignment(Pos.CENTER);
+        // Card 1: Candidatos
+        VBox cardCand = criarCardMetodoMockup(
+                "CANDIDATURAS",
+                "👥 Total de Inscritos",
+                String.valueOf(totalCandidatos),
+                "Candidatos registados",
+                "Ver Candidatos →",
+                this::mostrarGestaoCandidatos
+        );
 
-        VBox kpi1 = criarCardKpi("Candidatos Inscritos", String.valueOf(totalCandidatos), "#2563EB");
-        VBox kpi2 = criarCardKpi("Cursos Ativos", String.valueOf(totalCursos), "#059669");
-        VBox kpi3 = criarCardKpi("Vagas Disponíveis", String.valueOf(totalVagas), "#D97706");
-        VBox kpi4 = criarCardKpi("Concorrência Geral", String.format("%.2f cand/vaga", concorrencia), "#7C3AED");
+        // Card 2: Cursos
+        VBox cardCur = criarCardMetodoMockup(
+                "CURSOS ATIVOS",
+                "📚 Cursos em Oferta",
+                String.valueOf(totalCursos),
+                "Cursos preparatórios",
+                "Gerir Cursos →",
+                this::mostrarGestaoCursos
+        );
 
-        HBox.setHgrow(kpi1, Priority.ALWAYS);
-        HBox.setHgrow(kpi2, Priority.ALWAYS);
-        HBox.setHgrow(kpi3, Priority.ALWAYS);
-        HBox.setHgrow(kpi4, Priority.ALWAYS);
+        // Card 3: Vagas e Concorrência
+        VBox cardVagas = criarCardMetodoMockup(
+                "VAGAS & DEMANDA",
+                "🎯 Vagas Disponíveis",
+                String.valueOf(totalVagas),
+                String.format("%.2f cand/vaga", concorrencia),
+                "Emitir Balanço →",
+                this::exportarPdfGeral
+        );
 
-        gridKpis.getChildren().addAll(kpi1, kpi2, kpi3, kpi4);
+        colunaEsquerda.getChildren().addAll(cardCand, cardCur, cardVagas);
 
-        // Seção de Gráficos Reais
-        HBox painelGraficos = new HBox(20);
-        painelGraficos.setAlignment(Pos.CENTER);
+        // COLUNA DIREITA (Gráfico de Barras + Donut de Estatísticas + Lista de Transações/Inscrições Recentes)
+        VBox colunaDireita = new VBox(18);
+        HBox.setHgrow(colunaDireita, Priority.ALWAYS);
+
+        // Linha com 2 Gráficos (Daily Overview + Balance Statistic Donut)
+        HBox linhaGraficos = new HBox(18);
 
         // 1. BarChart: Candidatos por Província
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Província");
         NumberAxis yAxis = new NumberAxis();
-        yAxis.setLabel("Número de Candidatos");
+        yAxis.setLabel("Inscritos");
 
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setTitle("Distribuição Real de Candidatos por Província");
+        barChart.setTitle("Distribuição de Candidatos por Província");
         barChart.setLegendVisible(false);
-        barChart.getStyleClass().add("card");
+        barChart.getStyleClass().add("card-clean");
+        barChart.setPrefHeight(290);
         HBox.setHgrow(barChart, Priority.ALWAYS);
 
         XYChart.Series<String, Number> serieProv = new XYChart.Series<>();
@@ -226,31 +299,172 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         }
         barChart.getData().add(serieProv);
 
-        // 2. PieChart: Cursos Cadastrados e Vagas
+        // 2. PieChart Moderno (Estilo Balance Statistic Donut da Imagem)
         ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
         List<Curso> cursos = controller.listarCursos();
         if (cursos.isEmpty()) {
-            pieData.add(new PieChart.Data("Nenhum curso na base", 1));
+            pieData.add(new PieChart.Data("Nenhum curso", 1));
         } else {
             for (Curso c : cursos) {
-                pieData.add(new PieChart.Data(c.getNome() + " (" + c.getNumeroVagas() + ")", c.getNumeroVagas()));
+                pieData.add(new PieChart.Data(c.getNome(), c.getNumeroVagas()));
             }
         }
 
         PieChart pieChart = new PieChart(pieData);
-        pieChart.setTitle("Distribuição de Vagas por Curso");
-        pieChart.getStyleClass().add("card");
-        pieChart.setPrefWidth(420);
+        pieChart.setTitle("Proporção de Vagas por Curso");
+        pieChart.getStyleClass().add("card-clean");
+        pieChart.setPrefWidth(330);
+        pieChart.setPrefHeight(290);
 
-        painelGraficos.getChildren().addAll(barChart, pieChart);
+        linhaGraficos.getChildren().addAll(barChart, pieChart);
 
-        box.getChildren().addAll(header, gridKpis, painelGraficos);
+        // Tabela/Lista de Inscrições Recentes (Estilo Card "Transactions" do Mockup)
+        VBox cardTransacoes = criarTabelaInscricoesRecentes();
+        VBox.setVgrow(cardTransacoes, Priority.ALWAYS);
+
+        colunaDireita.getChildren().addAll(linhaGraficos, cardTransacoes);
+
+        layoutColunas.getChildren().addAll(colunaEsquerda, colunaDireita);
+        box.getChildren().addAll(header, layoutColunas);
 
         ScrollPane scroll = new ScrollPane(box);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
 
         areaConteudo.getChildren().setAll(scroll);
+    }
+
+    private VBox criarCardMetodoMockup(String tag, String titulo, String valor, String subtitulo, String textoBotao, Runnable acao) {
+        VBox card = new VBox(12);
+        card.getStyleClass().add("card-clean");
+
+        HBox topo = new HBox(8);
+        topo.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblTag = new Label(tag);
+        lblTag.setStyle("-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: -fx-text-secondary;");
+
+        Region esp = new Region();
+        HBox.setHgrow(esp, Priority.ALWAYS);
+
+        topo.getChildren().addAll(lblTag, esp);
+
+        Label lblTit = new Label(titulo);
+        lblTit.setStyle("-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -fx-text-primary;");
+
+        Button btnAcao = new Button(textoBotao);
+        btnAcao.getStyleClass().add("button-soft-blue");
+        btnAcao.setMaxWidth(Double.MAX_VALUE);
+        btnAcao.setOnAction(e -> acao.run());
+
+        HBox rodape = new HBox();
+        rodape.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblSub = new Label(subtitulo);
+        lblSub.setStyle("-fx-font-size: 11px; -fx-text-fill: -fx-text-secondary;");
+
+        Region espRodape = new Region();
+        HBox.setHgrow(espRodape, Priority.ALWAYS);
+
+        Label lblVal = new Label(valor);
+        lblVal.setStyle("-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: -fx-text-primary;");
+
+        rodape.getChildren().addAll(lblSub, espRodape, lblVal);
+
+        card.getChildren().addAll(topo, lblTit, btnAcao, rodape);
+        return card;
+    }
+
+    private VBox criarTabelaInscricoesRecentes() {
+        VBox card = new VBox(14);
+        card.getStyleClass().add("card-clean");
+
+        HBox header = new HBox(12);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblTit = new Label("Candidaturas Registadas");
+        lblTit.setStyle("-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: -fx-text-primary;");
+
+        Region esp = new Region();
+        HBox.setHgrow(esp, Priority.ALWAYS);
+
+        Label lblFiltro = new Label(listaCandidatosObservable.size() + " Registos Totais");
+        lblFiltro.setStyle("-fx-font-size: 11.5px; -fx-font-weight: 700; -fx-text-fill: -fx-accent-color; -fx-background-color: rgba(37,99,235,0.1); -fx-padding: 4px 10px; -fx-background-radius: 12px;");
+
+        Button btnVerTodos = new Button("Gerir Candidatos (Ctrl+P) →");
+        btnVerTodos.setStyle("-fx-background-color: transparent; -fx-text-fill: -fx-accent-color; -fx-font-size: 12px; -fx-font-weight: 600; -fx-cursor: hand;");
+        btnVerTodos.setOnAction(e -> focarPesquisa());
+
+        header.getChildren().addAll(lblTit, esp, lblFiltro, btnVerTodos);
+
+        VBox lista = new VBox(8);
+
+        if (listaCandidatosObservable.isEmpty()) {
+            Label lblVazio = new Label("Nenhuma candidatura registada no momento.");
+            lblVazio.setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-size: 13px; -fx-padding: 18px;");
+            lista.getChildren().add(lblVazio);
+        } else {
+            for (Candidato c : listaCandidatosObservable) {
+                HBox linha = new HBox(12);
+                linha.setAlignment(Pos.CENTER_LEFT);
+                linha.setStyle("-fx-padding: 10px 14px; -fx-background-color: -fx-surface-color; -fx-border-color: -fx-border-color-default; -fx-border-width: 0 0 1 0; -fx-border-radius: 6px;");
+
+                VBox colNome = new VBox(2);
+                Label lblNome = new Label(c.getNomeCompleto());
+                lblNome.setStyle("-fx-font-weight: 700; -fx-font-size: 13px; -fx-text-fill: -fx-text-primary;");
+                Label lblEmail = new Label(c.getEmail() != null ? c.getEmail() : "Sem email");
+                lblEmail.setStyle("-fx-font-size: 11px; -fx-text-fill: -fx-text-secondary;");
+                colNome.getChildren().addAll(lblNome, lblEmail);
+                colNome.setPrefWidth(240);
+
+                Label lblBi = new Label("BI: " + (c.getNumeroBI() != null ? c.getNumeroBI() : "-"));
+                lblBi.setStyle("-fx-font-size: 12px; -fx-text-fill: -fx-text-secondary;");
+                lblBi.setPrefWidth(150);
+
+                Label lblProv = new Label(c.getProvincia() != null ? c.getProvincia() : "-");
+                lblProv.setStyle("-fx-font-size: 12px; -fx-text-fill: -fx-text-secondary;");
+                lblProv.setPrefWidth(120);
+
+                Region espLinha = new Region();
+                HBox.setHgrow(espLinha, Priority.ALWAYS);
+
+                // Obter estado real do candidato
+                String textoStatus = "Pendente";
+                String classeStatus = "badge-status-pendente";
+
+                var optIns = inscricaoController.buscarInscricaoPorCandidato(c.getId());
+                if (optIns.isPresent()) {
+                    model.StatusInscricao st = optIns.get().getStatus();
+                    if (st == model.StatusInscricao.APROVADO) {
+                        textoStatus = "Aceite";
+                        classeStatus = "badge-status-aceite";
+                    } else if (st == model.StatusInscricao.NAO_APROVADO) {
+                        textoStatus = "Recusado";
+                        classeStatus = "badge-status-recusado";
+                    } else if (st == model.StatusInscricao.LISTA_ESPERA) {
+                        textoStatus = "Lista Espera";
+                        classeStatus = "badge-status-pendente";
+                    } else {
+                        textoStatus = "Pendente";
+                        classeStatus = "badge-status-pendente";
+                    }
+                }
+
+                Label lblStatus = new Label(textoStatus);
+                lblStatus.getStyleClass().add(classeStatus);
+
+                linha.getChildren().addAll(colNome, lblBi, lblProv, espLinha, lblStatus);
+                lista.getChildren().add(linha);
+            }
+        }
+
+        ScrollPane scrollLista = new ScrollPane(lista);
+        scrollLista.setFitToWidth(true);
+        scrollLista.setMaxHeight(360);
+        scrollLista.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;");
+
+        card.getChildren().addAll(header, scrollLista);
+        return card;
     }
 
     private VBox criarCardKpi(String rotulo, String valor, String corDestaque) {
@@ -286,9 +500,9 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
 
-        TextField txtBusca = new TextField();
-        txtBusca.setPromptText("🔍 Pesquisar por Nome ou BI...");
-        txtBusca.setPrefWidth(280);
+        txtBusca = new TextField();
+        txtBusca.setPromptText("🔍 Pesquisar por Nome ou BI... (Ctrl+P)");
+        txtBusca.setPrefWidth(300);
 
         Button btnExportarPdf = new Button("📥 Exportar Lista (PDF)");
         btnExportarPdf.getStyleClass().add("button-pdf");

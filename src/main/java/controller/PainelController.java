@@ -10,6 +10,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+
+ * Coordena as ações da interface relacionadas a Painel.
+
+ */
+
 public class PainelController extends ControllerSecretaria {
 
     public PainelController() {

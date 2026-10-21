@@ -6,6 +6,12 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import service.DatabaseInitializer;
 
+/**
+
+ * Representa App no sistema de inscrição e seleção.
+
+ */
+
 public class App extends Application {
 
     @Override

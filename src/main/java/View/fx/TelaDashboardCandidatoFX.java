@@ -22,6 +22,12 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.Period;
 
+/**
+
+ * Representa a interface visual relacionada a TelaDashboardCandidatoFX.
+
+ */
+
 public class TelaDashboardCandidatoFX extends BorderPane {
 
     private final Candidato candidato;
@@ -132,18 +138,18 @@ public class TelaDashboardCandidatoFX extends BorderPane {
     }
 
     private VBox criarCardHeroStatus() {
-        VBox card = new VBox(14);
-        card.getStyleClass().add("card");
-        card.setStyle("-fx-background-color: linear-gradient(to right, #0F172A, #1E3A8A); -fx-background-radius: 16px; -fx-padding: 26px;");
+        VBox card = new VBox(16);
+        card.getStyleClass().add("card-clean");
+        card.setStyle("-fx-background-color: linear-gradient(to right, #061E38, #0B3A68); -fx-background-radius: 18px; -fx-padding: 24px;");
 
         HBox topo = new HBox(16);
         topo.setAlignment(Pos.CENTER_LEFT);
 
         VBox titulos = new VBox(4);
         Label lblBoasVindas = new Label("Olá, " + (candidato != null ? candidato.getNomeCompleto() : "Candidato") + "!");
-        lblBoasVindas.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;");
+        lblBoasVindas.setStyle("-fx-font-size: 22px; -fx-font-weight: 800; -fx-text-fill: #FFFFFF;");
 
-        Label lblSub = new Label("Acompanhe aqui o estado da sua candidatura, validação de documentos e os seus dados registados.");
+        Label lblSub = new Label("Acompanhe o estado da sua candidatura, validação de documentos e os seus dados registados.");
         lblSub.setStyle("-fx-font-size: 13px; -fx-text-fill: #93C5FD;");
         titulos.getChildren().addAll(lblBoasVindas, lblSub);
 
@@ -157,7 +163,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
 
         lblStatusDescricao = new Label();
         lblStatusDescricao.setWrapText(true);
-        lblStatusDescricao.setStyle("-fx-font-size: 13px; -fx-text-fill: #E2E8F0; -fx-background-color: rgba(255, 255, 255, 0.1); -fx-padding: 12px 16px; -fx-background-radius: 8px;");
+        lblStatusDescricao.setStyle("-fx-font-size: 13px; -fx-text-fill: #F1F5F9; -fx-background-color: rgba(255, 255, 255, 0.12); -fx-padding: 12px 16px; -fx-background-radius: 10px;");
         atualizarDescricaoStatus();
 
         card.getChildren().addAll(topo, lblStatusDescricao);
@@ -171,20 +177,20 @@ public class TelaDashboardCandidatoFX extends BorderPane {
 
         switch (st) {
             case APROVADO -> {
-                lblStatusBadge.setText("✔ APROVADO");
-                lblStatusBadge.setStyle("-fx-background-color: #22C55E; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 8px 16px; -fx-background-radius: 20px;");
+                lblStatusBadge.setText("ACTIVE • APROVADO");
+                lblStatusBadge.setStyle("-fx-background-color: #2DD4BF; -fx-text-fill: #042F2E; -fx-font-weight: 800; -fx-font-size: 12px; -fx-padding: 7px 16px; -fx-background-radius: 20px;");
             }
             case LISTA_ESPERA -> {
-                lblStatusBadge.setText("📋 LISTA DE ESPERA");
-                lblStatusBadge.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 8px 16px; -fx-background-radius: 20px;");
+                lblStatusBadge.setText("PAUSE • LISTA DE ESPERA");
+                lblStatusBadge.setStyle("-fx-background-color: #0284C7; -fx-text-fill: #FFFFFF; -fx-font-weight: 800; -fx-font-size: 12px; -fx-padding: 7px 16px; -fx-background-radius: 20px;");
             }
             case NAO_APROVADO -> {
                 lblStatusBadge.setText("✖ NÃO CLASSIFICADO");
-                lblStatusBadge.setStyle("-fx-background-color: #EF4444; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 8px 16px; -fx-background-radius: 20px;");
+                lblStatusBadge.setStyle("-fx-background-color: #EF4444; -fx-text-fill: #FFFFFF; -fx-font-weight: 800; -fx-font-size: 12px; -fx-padding: 7px 16px; -fx-background-radius: 20px;");
             }
             default -> {
-                lblStatusBadge.setText("⏳ EM ANÁLISE / PENDENTE");
-                lblStatusBadge.setStyle("-fx-background-color: #F59E0B; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 8px 16px; -fx-background-radius: 20px;");
+                lblStatusBadge.setText("IN PROGRESS • EM ANÁLISE");
+                lblStatusBadge.setStyle("-fx-background-color: #F59E0B; -fx-text-fill: #FFFFFF; -fx-font-weight: 800; -fx-font-size: 12px; -fx-padding: 7px 16px; -fx-background-radius: 20px;");
             }
         }
     }
@@ -195,11 +201,11 @@ public class TelaDashboardCandidatoFX extends BorderPane {
                 : StatusInscricao.PENDENTE;
 
         switch (st) {
-            case APROVADO -> lblStatusDescricao.setText("Parabéns! A sua candidatura foi APROVADA pela comissão de seleção. Descarregue o seu comprovativo oficial abaixo e dirija-se à secretaria académica para efetuar a matrícula.");
+            case APROVADO -> lblStatusDescricao.setText("Parabéns! A sua candidatura foi APROVADA. Descarregue o seu comprovativo oficial em PDF abaixo e dirija-se à secretaria académica para efetuar a matrícula.");
             case LISTA_ESPERA -> lblStatusDescricao.setText("A sua candidatura foi avaliada e encontra-se em LISTA DE ESPERA. Em caso de desistências ou novas vagas, a secretaria entrará em contacto pelos meios indicados.");
             case NAO_APROVADO -> {
                 String motivo = inscricaoAtual != null && inscricaoAtual.getMotivoRejeicao() != null ? " Motivo: " + inscricaoAtual.getMotivoRejeicao() : "";
-                lblStatusDescricao.setText("Agradecemos a sua participação. A sua candidatura não foi classificada no número de vagas disponibilizadas para este ciclo." + motivo);
+                lblStatusDescricao.setText("A sua candidatura não foi classificada no número de vagas disponibilizadas para este ciclo." + motivo);
             }
             default -> lblStatusDescricao.setText("A sua candidatura foi registada com sucesso e está AGUARDANDO HOMOLOGAÇÃO da Secretaria. Submeta os seus documentos abaixo para agilizar o processo.");
         }

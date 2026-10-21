@@ -18,6 +18,12 @@ import java.io.File;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+
+ * Representa a interface visual relacionada a TelaNovaInscricaoFX.
+
+ */
+
 public class TelaNovaInscricaoFX extends BorderPane {
 
     private final InscricaoController controller;
@@ -63,49 +69,63 @@ public class TelaNovaInscricaoFX extends BorderPane {
         setBottom(criarBarraBotoes());
     }
 
+    public void alternarVisibilidadeSenhas() {
+        boolean mostrar = (txtSenhaVisivel != null && !txtSenhaVisivel.isVisible());
+        if (txtSenha != null && txtSenhaVisivel != null) {
+            txtSenha.setVisible(!mostrar);
+            txtSenha.setManaged(!mostrar);
+            txtSenhaVisivel.setVisible(mostrar);
+            txtSenhaVisivel.setManaged(mostrar);
+        }
+        if (txtConfirmarSenha != null && txtConfirmarSenhaVisivel != null) {
+            txtConfirmarSenha.setVisible(!mostrar);
+            txtConfirmarSenha.setManaged(!mostrar);
+            txtConfirmarSenhaVisivel.setVisible(mostrar);
+            txtConfirmarSenhaVisivel.setManaged(mostrar);
+        }
+        ComponentesVisuais.mostrarPopupToastGlobal(
+                mostrar ? "Campos de senha visíveis (Ctrl+O)" : "Campos de senha ocultos (Ctrl+O)",
+                ComponentesVisuais.TipoMensagem.INFO
+        );
+    }
+
     private void configurarAtalhos() {
+        this.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, ev -> {
+            if (ev.isControlDown() && (ev.getCode() == KeyCode.ENTER || ev.getCode() == KeyCode.S)) {
+                processarSubmissao();
+                ev.consume();
+            } else if (ev.isControlDown() && ev.getCode() == KeyCode.O) {
+                alternarVisibilidadeSenhas();
+                ev.consume();
+            } else if (ev.isControlDown() && ev.getCode() == KeyCode.P) {
+                if (txtNome != null) txtNome.requestFocus();
+                ev.consume();
+            } else if (ev.getCode() == KeyCode.F1) {
+                mostrarAjudaAtalhos();
+                ev.consume();
+            } else if (ev.getCode() == KeyCode.ESCAPE) {
+                Navegador.irParaTelaInicial();
+                ev.consume();
+            } else if (ev.isAltDown()) {
+                if (ev.getCode() == KeyCode.N && txtNome != null) { txtNome.requestFocus(); ev.consume(); }
+                else if (ev.getCode() == KeyCode.B && txtBI != null) { txtBI.requestFocus(); ev.consume(); }
+                else if (ev.getCode() == KeyCode.C && txtTelefone != null) { txtTelefone.requestFocus(); ev.consume(); }
+                else if (ev.getCode() == KeyCode.E && txtEmail != null) { txtEmail.requestFocus(); ev.consume(); }
+            }
+        });
+
         sceneProperty().addListener((obs, old, scene) -> {
             if (scene == null) return;
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
-                    this::processarSubmissao
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN),
-                    this::processarSubmissao
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.N, KeyCombination.ALT_DOWN),
-                    () -> { if (txtNome != null) txtNome.requestFocus(); }
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.B, KeyCombination.ALT_DOWN),
-                    () -> { if (txtBI != null) txtBI.requestFocus(); }
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN),
-                    () -> { if (txtTelefone != null) txtTelefone.requestFocus(); }
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.E, KeyCombination.ALT_DOWN),
-                    () -> { if (txtEmail != null) txtEmail.requestFocus(); }
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.ESCAPE),
-                    Navegador::irParaTelaInicial
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN),
-                    () -> { Navegador.alternarTema(); }
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.F2),
-                    () -> { Navegador.alternarTema(); }
-            );
-            scene.getAccelerators().put(
-                    new KeyCodeCombination(KeyCode.F1),
-                    this::mostrarAjudaAtalhos
-            );
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.ENTER, KeyCombination.CONTROL_DOWN), this::processarSubmissao);
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN), this::processarSubmissao);
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN), this::alternarVisibilidadeSenhas);
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN), () -> { if (txtNome != null) txtNome.requestFocus(); });
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.ESCAPE), Navegador::irParaTelaInicial);
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F1), this::mostrarAjudaAtalhos);
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.N, KeyCombination.ALT_DOWN), () -> { if (txtNome != null) txtNome.requestFocus(); });
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.B, KeyCombination.ALT_DOWN), () -> { if (txtBI != null) txtBI.requestFocus(); });
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN), () -> { if (txtTelefone != null) txtTelefone.requestFocus(); });
+            scene.getAccelerators().put(new KeyCodeCombination(KeyCode.E, KeyCombination.ALT_DOWN), () -> { if (txtEmail != null) txtEmail.requestFocus(); });
         });
     }
 
@@ -187,7 +207,13 @@ public class TelaNovaInscricaoFX extends BorderPane {
         txtNome.setId("txtNome");
         adicionarCampoGrid(gridDados, "Nome Completo *", txtNome, 0, 0, 2);
         txtNome.focusedProperty().addListener((obs, old, focused) -> {
-            if (!focused) InscricaoController.marcarValidadeCampo(txtNome, InscricaoController.isNomeValido(txtNome.getText()));
+            if (!focused) {
+                boolean ok = InscricaoController.isNomeValido(txtNome.getText());
+                InscricaoController.marcarValidadeCampo(txtNome, ok);
+                if (!ok && txtNome.getText() != null && !txtNome.getText().trim().isEmpty()) {
+                    ComponentesVisuais.mostrarPopupToast(txtNome, "Nome inválido: deve conter nome e apelido completos.", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
         });
 
         txtBI = new TextField();
@@ -195,7 +221,13 @@ public class TelaNovaInscricaoFX extends BorderPane {
         InscricaoController.aplicarFiltroBI(txtBI, 13);
         adicionarCampoGrid(gridDados, "Número do BI *", txtBI, 0, 1, 1);
         txtBI.focusedProperty().addListener((obs, old, focused) -> {
-            if (!focused) InscricaoController.marcarValidadeCampo(txtBI, InscricaoController.isBiValido(txtBI.getText()));
+            if (!focused) {
+                boolean ok = InscricaoController.isBiValido(txtBI.getText());
+                InscricaoController.marcarValidadeCampo(txtBI, ok);
+                if (!ok && txtBI.getText() != null && !txtBI.getText().trim().isEmpty()) {
+                    ComponentesVisuais.mostrarPopupToast(txtBI, "BI inválido: deve conter de 9 a 14 caracteres alfanuméricos.", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
         });
 
         dpNascimento = new DatePicker();
@@ -203,6 +235,11 @@ public class TelaNovaInscricaoFX extends BorderPane {
         dpNascimento.setMaxWidth(Double.MAX_VALUE);
         aplicarEstiloDatePicker(dpNascimento);
         adicionarCampoGrid(gridDados, "Data de Nascimento *", dpNascimento, 1, 1, 1);
+        dpNascimento.valueProperty().addListener((obs, old, data) -> {
+            if (data != null && !InscricaoController.isDataNascimentoValida(data)) {
+                ComponentesVisuais.mostrarPopupToast(dpNascimento, "Data inválida: o candidato deve ter entre 14 e 100 anos.", ComponentesVisuais.TipoMensagem.AVISO);
+            }
+        });
 
         txtTelefone = new TextField();
         txtTelefone.setPromptText("Ex: 841234567 (9 dígitos)");
@@ -210,7 +247,13 @@ public class TelaNovaInscricaoFX extends BorderPane {
         InscricaoController.aplicarFiltroCelular(txtTelefone, 9);
         adicionarCampoGrid(gridDados, "Telefone / Celular (9 dígitos) *", txtTelefone, 0, 2, 1);
         txtTelefone.focusedProperty().addListener((obs, old, focused) -> {
-            if (!focused) InscricaoController.marcarValidadeCampo(txtTelefone, InscricaoController.isTelefoneValido(txtTelefone.getText()));
+            if (!focused) {
+                boolean ok = InscricaoController.isTelefoneValido(txtTelefone.getText());
+                InscricaoController.marcarValidadeCampo(txtTelefone, ok);
+                if (!ok && txtTelefone.getText() != null && !txtTelefone.getText().trim().isEmpty()) {
+                    ComponentesVisuais.mostrarPopupToast(txtTelefone, "Celular inválido: deve conter exatamente 9 dígitos.", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
         });
 
         cbProvincia = new ComboBox<>(FXCollections.observableArrayList(
@@ -260,17 +303,57 @@ public class TelaNovaInscricaoFX extends BorderPane {
         txtEmail.setId("txtEmail");
         adicionarCampoGrid(gridConta, "Email de Registo *", txtEmail, 0, 0, 2);
         txtEmail.focusedProperty().addListener((obs, old, focused) -> {
-            if (!focused) InscricaoController.marcarValidadeCampo(txtEmail, InscricaoController.isEmailValido(txtEmail.getText()));
+            if (!focused) {
+                boolean ok = InscricaoController.isEmailValido(txtEmail.getText());
+                InscricaoController.marcarValidadeCampo(txtEmail, ok);
+                if (!ok && txtEmail.getText() != null && !txtEmail.getText().trim().isEmpty()) {
+                    ComponentesVisuais.mostrarPopupToast(txtEmail, "Email inválido: insira um formato válido (ex: seuemail@dominio.com).", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
         });
 
         HBox boxSenha = criarCampoSenhaComVisibilidade("Mínimo de 6 caracteres");
         txtSenha = (PasswordField) boxSenha.lookup("#pf");
         txtSenhaVisivel = (TextField) boxSenha.lookup("#tf");
+        txtSenha.focusedProperty().addListener((obs, old, focused) -> {
+            if (!focused) {
+                String val = obterSenhaAtual(txtSenha, txtSenhaVisivel);
+                if (val != null && !val.isEmpty() && !InscricaoController.isSenhaValida(val)) {
+                    ComponentesVisuais.mostrarPopupToast(boxSenha, "Senha muito curta: deve ter no mínimo 6 caracteres.", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
+        });
+        txtSenhaVisivel.focusedProperty().addListener((obs, old, focused) -> {
+            if (!focused) {
+                String val = obterSenhaAtual(txtSenha, txtSenhaVisivel);
+                if (val != null && !val.isEmpty() && !InscricaoController.isSenhaValida(val)) {
+                    ComponentesVisuais.mostrarPopupToast(boxSenha, "Senha muito curta: deve ter no mínimo 6 caracteres.", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
+        });
         adicionarHBoxGrid(gridConta, "Senha de Acesso *", boxSenha, 0, 1, 1);
 
         HBox boxConfirmar = criarCampoSenhaComVisibilidade("Repita a sua senha");
         txtConfirmarSenha = (PasswordField) boxConfirmar.lookup("#pf");
         txtConfirmarSenhaVisivel = (TextField) boxConfirmar.lookup("#tf");
+        txtConfirmarSenha.focusedProperty().addListener((obs, old, focused) -> {
+            if (!focused) {
+                String s1 = obterSenhaAtual(txtSenha, txtSenhaVisivel);
+                String s2 = obterSenhaAtual(txtConfirmarSenha, txtConfirmarSenhaVisivel);
+                if (s2 != null && !s2.isEmpty() && !s2.equals(s1)) {
+                    ComponentesVisuais.mostrarPopupToast(boxConfirmar, "A confirmação de senha não coincide com a senha digitada.", ComponentesVisuais.TipoMensagem.ERRO);
+                }
+            }
+        });
+        txtConfirmarSenhaVisivel.focusedProperty().addListener((obs, old, focused) -> {
+            if (!focused) {
+                String s1 = obterSenhaAtual(txtSenha, txtSenhaVisivel);
+                String s2 = obterSenhaAtual(txtConfirmarSenha, txtConfirmarSenhaVisivel);
+                if (s2 != null && !s2.isEmpty() && !s2.equals(s1)) {
+                    ComponentesVisuais.mostrarPopupToast(boxConfirmar, "A confirmação de senha não coincide com a senha digitada.", ComponentesVisuais.TipoMensagem.ERRO);
+                }
+            }
+        });
         adicionarHBoxGrid(gridConta, "Confirmar Senha *", boxConfirmar, 1, 1, 1);
 
         card.getChildren().addAll(tituloBox, new Separator(), gridConta);
@@ -352,6 +435,9 @@ public class TelaNovaInscricaoFX extends BorderPane {
         HBox.setHgrow(cbRendimento, Priority.ALWAYS);
         cbRendimento.setValue(QuestionarioCarencia.FaixaRendimento.ATE_5000);
         aplicarEstiloComboBox(cbRendimento);
+        cbRendimento.setOnMouseEntered(e -> {
+            ComponentesVisuais.mostrarPopupToast(cbRendimento, "Rendimento: Menor rendimento gera até 40 pontos na candidatura para vagas reservadas.", ComponentesVisuais.TipoMensagem.INFO, true);
+        });
         Button btnAjudaRendimento = criarBotaoAjuda(
                 "Rendimento Familiar Mensal",
                 "Informe o rendimento mensal total do seu agregado familiar (todos que vivem na mesma casa).\n\n"
@@ -371,6 +457,9 @@ public class TelaNovaInscricaoFX extends BorderPane {
         HBox.setHgrow(cbLaboral, Priority.ALWAYS);
         cbLaboral.setValue(QuestionarioCarencia.SituacaoLaboral.DESEMPREGADO);
         aplicarEstiloComboBox(cbLaboral);
+        cbLaboral.setOnMouseEntered(e -> {
+            ComponentesVisuais.mostrarPopupToast(cbLaboral, "Situação Laboral: Desemprego ou estudo concede até 20 pontos de prioridade na classificação.", ComponentesVisuais.TipoMensagem.INFO, true);
+        });
         Button btnAjudaLaboral = criarBotaoAjuda(
                 "Situação Laboral",
                 "Informe a situação profissional actual do candidato (não do agregado familiar).\n\n"
@@ -389,6 +478,9 @@ public class TelaNovaInscricaoFX extends BorderPane {
         txtDistancia.setPromptText("Distância em quilómetros");
         HBox.setHgrow(txtDistancia, Priority.ALWAYS);
         InscricaoController.aplicarFiltroNumericoDecimal(txtDistancia, 2000.0);
+        txtDistancia.setOnMouseEntered(e -> {
+            ComponentesVisuais.mostrarPopupToast(txtDistancia, "Distância: Candidatos que residem a mais de 100 km recebem até 15 pontos adicionais.", ComponentesVisuais.TipoMensagem.INFO, true);
+        });
         Button btnAjudaDistancia = criarBotaoAjuda(
                 "Distância até à Instituição",
                 "Informe a distância em quilómetros entre a sua residência e a instituição.\n\n"
@@ -405,6 +497,9 @@ public class TelaNovaInscricaoFX extends BorderPane {
         boxChecks.setPadding(new Insets(20, 0, 0, 0));
         chkOrfao = new CheckBox("Sou órfão ou chefe de família  (+15 pontos)");
         chkOrfao.setStyle("-fx-text-fill: -fx-text-primary;");
+        chkOrfao.setOnMouseEntered(e -> {
+            ComponentesVisuais.mostrarPopupToast(chkOrfao, "Órfão / Chefe de Família: Bonificação de 15 pontos adicionais no critério social.", ComponentesVisuais.TipoMensagem.INFO, true);
+        });
         Tooltip ttOrfao = new Tooltip(
                 "Marque se não tem pais vivos ou se é a única pessoa que provê renda ao agregado familiar.\n"
                 + "Adiciona 15 pontos à sua pontuação de carência."
@@ -415,6 +510,9 @@ public class TelaNovaInscricaoFX extends BorderPane {
 
         chkApoio = new CheckBox("Recebo apoio financeiro / bolsa social");
         chkApoio.setStyle("-fx-text-fill: -fx-text-primary;");
+        chkApoio.setOnMouseEntered(e -> {
+            ComponentesVisuais.mostrarPopupToast(chkApoio, "Apoio Financeiro: Quem NÃO possui auxílio financeiro recebe 10 pontos de carência.", ComponentesVisuais.TipoMensagem.INFO, true);
+        });
         Tooltip ttApoio = new Tooltip(
                 "Marque se já recebe alguma forma de apoio financeiro governamental ou bolsa social.\n"
                 + "Atenção: receber apoio REDUZ a pontuação de carência (0 pontos extras).\n"
@@ -523,7 +621,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
         barra.setPadding(new Insets(16, 36, 16, 36));
         barra.setStyle("-fx-background-color: -fx-surface-color; -fx-border-color: -fx-border-color-default; -fx-border-width: 1 0 0 0;");
 
-        Label lblAtalhos = new Label("Ctrl+Enter: Submeter  |  F1: Ajuda  |  Esc: Cancelar");
+        Label lblAtalhos = new Label("Ctrl+Enter: Submeter  |  Ctrl+O: Ver Senhas  |  Ctrl+P: Início  |  F1: Ajuda  |  Esc: Cancelar");
         lblAtalhos.setStyle("-fx-font-size: 11px; -fx-text-fill: -fx-text-secondary;");
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
@@ -704,6 +802,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
         lblMensagem.setText("⚠ " + mensagem);
         lblMensagem.setStyle("-fx-text-fill: #991B1B; -fx-background-color: #FEE2E2; -fx-padding: 10px 14px; -fx-background-radius: 8px; -fx-font-weight: bold;");
         lblMensagem.setVisible(true);
+        ComponentesVisuais.mostrarPopupToast(lblMensagem, mensagem, ComponentesVisuais.TipoMensagem.AVISO);
     }
 
     private void mostrarAjudaAtalhos() {
@@ -712,6 +811,8 @@ public class TelaNovaInscricaoFX extends BorderPane {
         alert.setHeaderText("Atalhos de Teclado Disponíveis");
         alert.setContentText(
                 "Ctrl + Enter ou Ctrl + S  →  Submeter inscrição\n"
+                + "Ctrl + O                 →  Tornar campos de senha visíveis / ocultos\n"
+                + "Ctrl + P                 →  Focar campo inicial (Nome)\n"
                 + "Alt + N                  →  Focar campo Nome\n"
                 + "Alt + B                  →  Focar campo BI\n"
                 + "Alt + C                  →  Focar campo Celular/Contacto\n"

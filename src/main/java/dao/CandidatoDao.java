@@ -12,6 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Acede aos dados de Candidato na base de dados.
+
+ */
+
 public class CandidatoDao implements Tabela<Candidato> {
 
     private static final String SELECT_BASE =

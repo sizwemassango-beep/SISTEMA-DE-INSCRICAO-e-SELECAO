@@ -1,3 +1,21 @@
+
+    /**
+
+     * Define os valores possíveis para NivelCarencia.
+
+     */
+
+    /**
+
+     * Define os valores possíveis para NivelCarencia.
+
+     */
+
+    /**
+
+     * Define os valores possíveis para NivelCarencia.
+
+     */
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -18,6 +36,12 @@ public class QuestionarioCarencia {
     public static final int LIMIAR_CARENCIA_ALTA = 70;
     public static final int LIMIAR_CARENCIA_MEDIA = 40;
     public static final double DISTANCIA_MAXIMA_KM = 2000;
+
+    /**
+
+     * Define os valores possíveis para FaixaRendimento.
+
+     */
 
     public enum FaixaRendimento {
         ATE_5000("Até 5.000 MT", 40),
@@ -48,6 +72,12 @@ public class QuestionarioCarencia {
         }
     }
 
+    /**
+
+     * Define os valores possíveis para SituacaoLaboral.
+
+     */
+
     public enum SituacaoLaboral {
         DESEMPREGADO("Desempregado", 20),
         TRABALHO_INFORMAL("Trabalho informal", 14),
@@ -76,6 +106,12 @@ public class QuestionarioCarencia {
             return descricao;
         }
     }
+
+    /**
+
+     * Define os valores possíveis para NivelCarencia.
+
+     */
 
     public enum NivelCarencia {
         ALTA("Carência alta"),

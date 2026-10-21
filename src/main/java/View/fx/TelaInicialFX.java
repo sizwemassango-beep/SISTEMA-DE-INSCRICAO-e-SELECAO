@@ -8,6 +8,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import service.DatabaseInitializer;
 
+/**
+
+ * Representa a interface visual relacionada a TelaInicialFX.
+
+ */
+
 public class TelaInicialFX extends BorderPane {
 
     private final DatabaseInitializer dbInit;
@@ -28,6 +34,8 @@ public class TelaInicialFX extends BorderPane {
         barra.setAlignment(Pos.CENTER_LEFT);
         barra.setPadding(new Insets(16, 32, 16, 32));
         barra.setStyle("-fx-background-color: -fx-surface-color; -fx-border-color: -fx-border-color-default; -fx-border-width: 0 0 1 0;");
+
+        StackPane logoBarra = ComponentesVisuais.criarLogoCompacto(40);
 
         VBox boxMarca = new VBox(2);
         Label lblMarca = new Label("SIS • Admissão");
@@ -51,7 +59,7 @@ public class TelaInicialFX extends BorderPane {
             btnTema.setText(Navegador.isModoEscuro() ? "☀ Modo Claro" : "🌙 Modo Escuro");
         });
 
-        barra.getChildren().addAll(boxMarca, espacador, lblStatusDb, btnTema);
+        barra.getChildren().addAll(logoBarra, boxMarca, espacador, lblStatusDb, btnTema);
         return barra;
     }
 

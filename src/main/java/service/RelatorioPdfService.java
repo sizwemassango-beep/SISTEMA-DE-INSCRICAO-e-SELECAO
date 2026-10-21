@@ -14,6 +14,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+
+ * Implementa serviços de aplicação relacionados a RelatorioPdf.
+
+ */
+
 public class RelatorioPdfService {
 
     private static final Color COR_PRIMARIA = new Color(30, 58, 138); // Deep Blue

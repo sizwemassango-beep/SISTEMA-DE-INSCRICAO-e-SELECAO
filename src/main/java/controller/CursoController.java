@@ -5,6 +5,12 @@ import model.Curso;
 
 import java.util.List;
 
+/**
+
+ * Coordena as ações da interface relacionadas a Curso.
+
+ */
+
 public class CursoController extends ControllerSecretaria {
 
     public CursoController() {

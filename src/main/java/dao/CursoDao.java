@@ -12,6 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Acede aos dados de Curso na base de dados.
+
+ */
+
 public class CursoDao implements Tabela<Curso> {
 
     private final ConexaoBD conexao;

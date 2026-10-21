@@ -9,6 +9,12 @@ import model.QuestionarioCarencia;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+/**
+
+ * Representa DatabaseInitializer no sistema de inscrição e seleção.
+
+ */
+
 public class DatabaseInitializer {
 
     private final ConexaoBD conexaoBD;

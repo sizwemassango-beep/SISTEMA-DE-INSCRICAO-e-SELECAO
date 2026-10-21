@@ -4,6 +4,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+
+ * Representa Navegador no sistema de inscrição e seleção.
+
+ */
+
 public class Navegador {
 
     private static Stage palcoPrincipal;
@@ -26,9 +32,37 @@ public class Navegador {
             aplicarEstilo(cenaPrincipal);
             palcoPrincipal.setScene(cenaPrincipal);
         } else {
+            cenaPrincipal.getAccelerators().clear();
             cenaPrincipal.setRoot(novaRaiz);
             aplicarTemaAtual(novaRaiz);
         }
+        configurarAtalhosGlobais(cenaPrincipal);
+    }
+
+    private static void configurarAtalhosGlobais(Scene scene) {
+        if (scene == null) return;
+        scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, ev -> {
+            if (ev.getCode() == javafx.scene.input.KeyCode.F2 || (ev.isControlDown() && ev.getCode() == javafx.scene.input.KeyCode.T)) {
+                alternarTema();
+                ev.consume();
+            } else if (ev.getCode() == javafx.scene.input.KeyCode.F1) {
+                ComponentesVisuais.mostrarPopupToastGlobal("SIS • Atalhos: Ctrl+P (Pesquisar), Ctrl+O (Ver Senhas), F2/Ctrl+T (Tema), Ctrl+Enter (Submeter), Esc (Voltar)", ComponentesVisuais.TipoMensagem.INFO);
+                ev.consume();
+            } else if (ev.isControlDown() && ev.getCode() == javafx.scene.input.KeyCode.P) {
+                if (scene.getRoot() instanceof TelaDashboardSecretariaFX) {
+                    ((TelaDashboardSecretariaFX) scene.getRoot()).focarPesquisa();
+                    ev.consume();
+                }
+            } else if (ev.isControlDown() && ev.getCode() == javafx.scene.input.KeyCode.O) {
+                if (scene.getRoot() instanceof TelaAutenticacaoFX) {
+                    ((TelaAutenticacaoFX) scene.getRoot()).alternarVisibilidadeSenha();
+                    ev.consume();
+                } else if (scene.getRoot() instanceof TelaNovaInscricaoFX) {
+                    ((TelaNovaInscricaoFX) scene.getRoot()).alternarVisibilidadeSenhas();
+                    ev.consume();
+                }
+            }
+        });
     }
 
     public static void alternarTema() {

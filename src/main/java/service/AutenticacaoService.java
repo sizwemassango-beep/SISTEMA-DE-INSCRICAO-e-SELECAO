@@ -1,3 +1,9 @@
+
+    /**
+
+     * Define os valores possíveis para TipoPerfil.
+
+     */
 package service;
 
 import dao.AdministradorDao;
@@ -10,13 +16,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Implementa serviços de aplicação relacionados a Autenticacao.
+
+ */
+
 public class AutenticacaoService {
+
+    /**
+
+     * Define os valores possíveis para TipoPerfil.
+
+     */
 
     public enum TipoPerfil {
         ADMINISTRADOR,
         CANDIDATO,
         INVALIDO
     }
+
+    /**
+
+     * Representa ResultadoLogin no sistema de inscrição e seleção.
+
+     */
 
     public static class ResultadoLogin {
         private final TipoPerfil perfil;

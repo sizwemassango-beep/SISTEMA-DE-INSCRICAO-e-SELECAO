@@ -7,6 +7,12 @@ import service.AutenticacaoService.ResultadoLogin;
 
 import java.util.List;
 
+/**
+
+ * Coordena as ações da interface relacionadas a Login.
+
+ */
+
 public class LoginController extends ControllerBase {
 
     private final AutenticacaoService autenticacaoService;

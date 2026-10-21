@@ -3,16 +3,16 @@
    CSS MODERNO COM ALTO CONTRASTE (LIGHT & DARK MODE)
    ========================================================================== */
 
-/* Tema Claro (Padrão) */
+/* Tema Claro (Inspirado no Design Moderno) */
 .root {
-    -fx-font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    -fx-background-color: #F1F5F9;
-    -fx-accent-color: #2563EB;
-    -fx-primary-color: #1E3A8A;
+    -fx-font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    -fx-background-color: #EDF3F8;
+    -fx-accent-color: #0EA5E9;
+    -fx-primary-color: #0A1931;
     -fx-surface-color: #FFFFFF;
-    -fx-text-primary: #0F172A;
-    -fx-text-secondary: #334155;
-    -fx-border-color-default: #CBD5E1;
+    -fx-text-primary: #1E293B;
+    -fx-text-secondary: #64748B;
+    -fx-border-color-default: #E2E8F0;
 }
 
 /* Forçar texto padrão a ser nítido no tema claro */
@@ -25,7 +25,7 @@
     -fx-background-color: #0B1120;
     -fx-surface-color: #1E293B;
     -fx-text-primary: #F8FAFC;
-    -fx-text-secondary: #CBD5E1;
+    -fx-text-secondary: #94A3B8;
     -fx-border-color-default: #334155;
 }
 
@@ -36,21 +36,21 @@
 /* ============================ CARDS E PAINÉIS ============================ */
 .card {
     -fx-background-color: -fx-surface-color;
-    -fx-background-radius: 14px;
+    -fx-background-radius: 18px;
     -fx-border-color: -fx-border-color-default;
-    -fx-border-radius: 14px;
+    -fx-border-radius: 18px;
     -fx-border-width: 1px;
     -fx-padding: 24px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.06), 12, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.04), 16, 0, 0, 4);
 }
 
 .card:hover {
-    -fx-effect: dropshadow(three-pass-box, rgba(37, 99, 235, 0.15), 18, 0, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.12), 20, 0, 0, 6);
 }
 
 .card-title {
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
     -fx-text-fill: -fx-text-primary;
 }
 
@@ -62,78 +62,185 @@
 /* Cards de KPI (Dashboard) */
 .kpi-card {
     -fx-background-color: -fx-surface-color;
-    -fx-background-radius: 14px;
+    -fx-background-radius: 16px;
     -fx-border-color: -fx-border-color-default;
-    -fx-border-radius: 14px;
+    -fx-border-radius: 16px;
     -fx-border-width: 1px;
     -fx-padding: 20px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.05), 8, 0, 0, 3);
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.04), 10, 0, 0, 3);
 }
 
 .kpi-title {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
     -fx-font-weight: 700;
     -fx-text-fill: -fx-text-secondary;
     -fx-text-transform: uppercase;
 }
 
 .kpi-value {
-    -fx-font-size: 30px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1E3A8A;
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -fx-text-primary;
 }
 
 .dark-theme .kpi-value {
-    -fx-text-fill: #60A5FA;
-}
-
-/* ============================ SIDEBAR ============================ */
-.sidebar {
-    -fx-background-color: #0F172A;
-    -fx-padding: 24px 16px;
-    -fx-border-color: transparent #1E293B transparent transparent;
-    -fx-border-width: 0 1 0 0;
-}
-
-.sidebar .label {
     -fx-text-fill: #F8FAFC;
 }
 
-.sidebar-title {
-    -fx-font-size: 17px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #FFFFFF !important;
+/* Card moderno estilo Soax */
+.card-clean {
+    -fx-background-color: -fx-surface-color;
+    -fx-background-radius: 18px;
+    -fx-border-color: -fx-border-color-default;
+    -fx-border-radius: 18px;
+    -fx-border-width: 1px;
+    -fx-padding: 22px;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.03), 14, 0, 0, 4);
 }
 
-.sidebar-subtitle {
+/* Badges de Status Real dos Candidatos (Pendente, Recusado, Aceite) */
+.badge-status-pendente {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #B45309 !important;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-padding: 4px 10px;
+    -fx-background-radius: 8px;
+}
+
+.dark-theme .badge-status-pendente {
+    -fx-background-color: #78350F;
+    -fx-text-fill: #FDE68A !important;
+}
+
+.badge-status-aceite {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #15803D !important;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-padding: 4px 10px;
+    -fx-background-radius: 8px;
+}
+
+.dark-theme .badge-status-aceite {
+    -fx-background-color: #14532D;
+    -fx-text-fill: #BBF7D0 !important;
+}
+
+.badge-status-recusado {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #B91C1C !important;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-padding: 4px 10px;
+    -fx-background-radius: 8px;
+}
+
+.dark-theme .badge-status-recusado {
+    -fx-background-color: #7F1D1D;
+    -fx-text-fill: #FECACA !important;
+}
+
+.badge-teal-action {
+    -fx-background-color: #2DD4BF;
+    -fx-text-fill: #042F2E !important;
     -fx-font-size: 12px;
-    -fx-text-fill: #94A3B8 !important;
-}
-
-.sidebar-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: #CBD5E1;
-    -fx-font-size: 14px;
-    -fx-font-weight: 500;
-    -fx-alignment: CENTER_LEFT;
-    -fx-padding: 10px 16px;
+    -fx-font-weight: 700;
+    -fx-padding: 7px 16px;
     -fx-background-radius: 8px;
     -fx-cursor: hand;
 }
 
+.badge-teal-action:hover {
+    -fx-background-color: #14B8A6;
+}
+
+.button-soft-blue {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #2563EB !important;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 8px 16px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.dark-theme .button-soft-blue {
+    -fx-background-color: #1E3A8A;
+    -fx-text-fill: #93C5FD !important;
+}
+
+.button-soft-blue:hover {
+    -fx-background-color: #DBEAFE;
+}
+
+/* ============================ SIDEBAR ============================ */
+.sidebar {
+    -fx-background-color: #061E38;
+    -fx-padding: 24px 14px;
+    -fx-border-color: transparent #0B2A4A transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.dark-theme .sidebar {
+    -fx-background-color: #030F1C;
+    -fx-border-color: transparent #1E293B transparent transparent;
+}
+
+.sidebar .label {
+    -fx-text-fill: #E2E8F0;
+}
+
+.sidebar-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #FFFFFF !important;
+}
+
+.sidebar-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: #38BDF8 !important;
+    -fx-font-weight: 600;
+}
+
+.sidebar-section-header {
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #475569;
+    -fx-text-transform: uppercase;
+    -fx-padding: 12px 14px 4px 14px;
+}
+
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94A3B8;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 11px 16px;
+    -fx-background-radius: 12px;
+    -fx-cursor: hand;
+}
+
 .sidebar-button:hover {
-    -fx-background-color: #1E293B;
+    -fx-background-color: rgba(255, 255, 255, 0.08);
     -fx-text-fill: #FFFFFF;
 }
 
 .sidebar-button-active {
-    -fx-background-color: #2563EB;
-    -fx-text-fill: #FFFFFF;
-    -fx-font-weight: bold;
+    -fx-background-color: #2DD4BF;
+    -fx-text-fill: #042F2E !important;
+    -fx-font-weight: 800;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 11px 16px;
+    -fx-background-radius: 12px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(45, 212, 191, 0.35), 10, 0, 0, 3);
 }
 
 .sidebar-button-active:hover {
-    -fx-background-color: #1D4ED8;
+    -fx-background-color: #14B8A6;
+    -fx-text-fill: #FFFFFF !important;
 }
 
 /* ============================ BOTÕES ============================ */
@@ -429,103 +536,137 @@
     -fx-background-color: #CBD5E1;
 }
 
-/* ============================ DATE PICKER POPUP ============================ */
+/* ============================ DATE PICKER (EDITOR & BUTTON) ============================ */
+.date-picker {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-border-color-default;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+.date-picker > .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-primary;
+    -fx-border-color: transparent;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+.date-picker > .arrow-button > .arrow {
+    -fx-background-color: -fx-text-primary;
+}
+
+.dark-theme .date-picker {
+    -fx-background-color: #1E293B;
+    -fx-border-color: #334155;
+}
+
+.dark-theme .date-picker > .text-field {
+    -fx-text-fill: #F8FAFC !important;
+}
+
+.dark-theme .date-picker > .arrow-button > .arrow {
+    -fx-background-color: #38BDF8 !important;
+}
+
+/* ============================ DATE PICKER POPUP (CALENDÁRIO) ============================ */
 .date-picker-popup {
     -fx-background-color: #FFFFFF;
     -fx-border-color: #CBD5E1;
     -fx-border-radius: 10px;
     -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 16, 0, 0, 5);
 }
 
 .date-picker-popup .month-year-pane {
-    -fx-background-color: #F1F5F9;
+    -fx-background-color: #0F172A;
+    -fx-background-radius: 10px 10px 0 0;
 }
 
 .date-picker-popup .month-year-pane .label {
-    -fx-text-fill: #0F172A;
+    -fx-text-fill: #FFFFFF !important;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
 }
 
-.date-picker-popup > * > .spinner > .button > .left-arrow,
-.date-picker-popup > * > .spinner > .button > .right-arrow {
-    -fx-background-color: #0F172A;
+.date-picker-popup .spinner > .button > .left-arrow,
+.date-picker-popup .spinner > .button > .right-arrow {
+    -fx-background-color: #FFFFFF !important;
 }
 
 .date-picker-popup .day-name-cell {
-    -fx-text-fill: #334155;
-    -fx-font-weight: 600;
+    -fx-text-fill: #475569 !important;
+    -fx-font-weight: 700;
     -fx-font-size: 11px;
 }
 
 .date-picker-popup .day-cell {
-    -fx-text-fill: #0F172A;
+    -fx-text-fill: #0F172A !important;
+    -fx-font-weight: 600;
     -fx-background-color: transparent;
 }
 
 .date-picker-popup .day-cell:hover {
-    -fx-background-color: #EFF6FF;
+    -fx-background-color: #E0F2FE;
+    -fx-text-fill: #0369A1 !important;
     -fx-background-radius: 6px;
 }
 
 .date-picker-popup .day-cell.selected,
 .date-picker-popup .day-cell:selected {
-    -fx-background-color: #2563EB;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #2563EB !important;
+    -fx-text-fill: #FFFFFF !important;
+    -fx-font-weight: bold;
     -fx-background-radius: 6px;
 }
 
 .date-picker-popup .day-cell.today {
     -fx-border-color: #2563EB;
     -fx-border-radius: 6px;
-    -fx-text-fill: #2563EB;
+    -fx-border-width: 1.5px;
+    -fx-text-fill: #2563EB !important;
     -fx-font-weight: bold;
 }
 
-.dark-theme .date-picker-popup {
-    -fx-background-color: #1E293B;
-    -fx-border-color: #334155;
+/* ============================ CHECKBOX CONTRASTE ============================ */
+.check-box {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-size: 12px;
 }
 
-.dark-theme .date-picker-popup .month-year-pane {
-    -fx-background-color: #0F172A;
+.check-box .box {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-border-color-default;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
 }
 
-.dark-theme .date-picker-popup .month-year-pane .label {
-    -fx-text-fill: #F8FAFC;
-    -fx-font-weight: bold;
-}
-
-.dark-theme .date-picker-popup > * > .spinner > .button > .left-arrow,
-.dark-theme .date-picker-popup > * > .spinner > .button > .right-arrow {
-    -fx-background-color: #F8FAFC;
-}
-
-.dark-theme .date-picker-popup .day-name-cell {
-    -fx-text-fill: #94A3B8;
-    -fx-font-weight: 600;
-    -fx-font-size: 11px;
-}
-
-.dark-theme .date-picker-popup .day-cell {
-    -fx-text-fill: #F8FAFC;
-    -fx-background-color: transparent;
-}
-
-.dark-theme .date-picker-popup .day-cell:hover {
-    -fx-background-color: #334155;
-    -fx-background-radius: 6px;
-}
-
-.dark-theme .date-picker-popup .day-cell.selected,
-.dark-theme .date-picker-popup .day-cell:selected {
+.check-box:selected .box {
     -fx-background-color: #2563EB;
-    -fx-text-fill: #FFFFFF;
-    -fx-background-radius: 6px;
+    -fx-border-color: #2563EB;
 }
 
-.dark-theme .date-picker-popup .day-cell.today {
-    -fx-border-color: #60A5FA;
-    -fx-border-radius: 6px;
-    -fx-text-fill: #60A5FA;
-    -fx-font-weight: bold;
+.check-box:selected .mark {
+    -fx-background-color: #FFFFFF;
+}
+
+.dark-theme .check-box {
+    -fx-text-fill: #F8FAFC !important;
+}
+
+.dark-theme .check-box .box {
+    -fx-background-color: #1E293B;
+    -fx-border-color: #475569;
+}
+
+.dark-theme .check-box:selected .box {
+    -fx-background-color: #38BDF8;
+    -fx-border-color: #38BDF8;
+}
+
+.dark-theme .check-box:selected .mark {
+    -fx-background-color: #042F2E;
 }

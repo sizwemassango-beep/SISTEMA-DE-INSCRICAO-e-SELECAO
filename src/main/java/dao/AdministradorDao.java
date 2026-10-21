@@ -11,6 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Acede aos dados de Administrador na base de dados.
+
+ */
+
 public class AdministradorDao implements Tabela<Administrador> {
 
     private static final String SELECT_BASE =

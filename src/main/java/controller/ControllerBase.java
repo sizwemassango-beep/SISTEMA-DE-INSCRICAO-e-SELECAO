@@ -2,6 +2,12 @@ package controller;
 
 import dao.ConexaoBD;
 
+/**
+
+ * Representa ControllerBase no sistema de inscrição e seleção.
+
+ */
+
 public abstract class ControllerBase {
 
     protected final ConexaoBD conexaoBD;

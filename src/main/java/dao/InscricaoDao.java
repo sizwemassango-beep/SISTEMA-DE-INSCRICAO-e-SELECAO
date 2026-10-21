@@ -11,6 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Acede aos dados de Inscricao na base de dados.
+
+ */
+
 public class InscricaoDao implements Tabela<Inscricao> {
 
     private final ConexaoBD conexao;

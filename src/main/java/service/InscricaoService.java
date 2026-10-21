@@ -12,6 +12,12 @@ import model.StatusInscricao;
 
 import java.time.LocalDate;
 
+/**
+
+ * Implementa serviços de aplicação relacionados a Inscricao.
+
+ */
+
 public class InscricaoService {
 
     private final CandidatoDao candidatoDao;

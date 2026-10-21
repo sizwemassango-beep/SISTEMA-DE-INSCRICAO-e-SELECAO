@@ -22,6 +22,12 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
+/**
+
+ * Coordena as ações da interface relacionadas a Inscricao.
+
+ */
+
 public class InscricaoController extends ControllerBase {
 
     private static final Pattern REGEX_EMAIL = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");

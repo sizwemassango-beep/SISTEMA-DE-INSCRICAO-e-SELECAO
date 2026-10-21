@@ -14,6 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+
+ * Acede aos dados de QuestionarioCarencia na base de dados.
+
+ */
+
 public class QuestionarioCarenciaDao implements Tabela<QuestionarioCarencia> {
 
     private final ConexaoBD conexao;

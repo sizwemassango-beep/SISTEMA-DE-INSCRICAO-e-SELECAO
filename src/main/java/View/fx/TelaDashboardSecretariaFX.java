@@ -308,12 +308,25 @@ public class TelaDashboardSecretariaFX extends BorderPane {
 
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Província");
+        xAxis.setAnimated(false);
+        xAxis.setTickLabelsVisible(true);
+        xAxis.setTickMarkVisible(true);
+        xAxis.setTickLabelRotation(-40);
+        xAxis.setTickLabelGap(4);
+
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Inscritos");
+        yAxis.setAnimated(false);
+        yAxis.setTickLabelsVisible(true);
+        yAxis.setTickMarkVisible(true);
+        yAxis.setMinorTickVisible(false);
+        yAxis.setTickUnit(1);
+        yAxis.setAutoRanging(true);
 
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
         barChart.setTitle("Distribuição de Candidatos por Província");
         barChart.setLegendVisible(false);
+        barChart.setAnimated(false);
         barChart.getStyleClass().add("card-clean");
         barChart.setPrefHeight(290);
         HBox.setHgrow(barChart, Priority.ALWAYS);
@@ -330,20 +343,31 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         }
         barChart.getData().add(serieProv);
 
+        // Tooltip com valores nas barras para visualização precisa
+        for (XYChart.Data<String, Number> d : serieProv.getData()) {
+            d.nodeProperty().addListener((obs, oldN, newN) -> {
+                if (newN != null) {
+                    Tooltip.install(newN, new Tooltip(d.getXValue() + ": " + d.getYValue() + " inscrito(s)"));
+                }
+            });
+        }
+
         ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
         List<Curso> cursos = controller.listarCursos();
         if (cursos.isEmpty()) {
-            pieData.add(new PieChart.Data("Nenhum curso", 1));
+            pieData.add(new PieChart.Data("Nenhum curso (0 vagas)", 1));
         } else {
             for (Curso c : cursos) {
-                pieData.add(new PieChart.Data(c.getNome(), c.getNumeroVagas()));
+                pieData.add(new PieChart.Data(c.getNome() + " (" + c.getNumeroVagas() + " vagas)", c.getNumeroVagas()));
             }
         }
 
         PieChart pieChart = new PieChart(pieData);
         pieChart.setTitle("Proporção de Vagas por Curso");
+        pieChart.setAnimated(false);
+        pieChart.setLabelsVisible(true);
         pieChart.getStyleClass().add("card-clean");
-        pieChart.setPrefWidth(330);
+        pieChart.setPrefWidth(350);
         pieChart.setPrefHeight(290);
 
         linhaGraficos.getChildren().addAll(barChart, pieChart);
@@ -794,7 +818,9 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 ? inscricaoController.contarAprovadosPorCursoETipo(cursoInsc.getId(), "CARENCIA") : 0;
         double nota12MinCurso = (cursoInsc != null && cursoInsc.getId() != null)
                 ? inscricaoController.buscarNota12MaisBaixaPorCurso(cursoInsc.getId()) : 0.0;
-        double nota12Candidato = inscricao != null ? inscricao.getNota12() : 0.0;
+        double nota12Candidato = inscricao != null ? (inscricao.getNota12() > 0 ? inscricao.getNota12() : inscricao.getNota()) : 0.0;
+        double notaMinimaCurso = cursoInsc != null ? cursoInsc.getNotaMinima() : 10.0;
+        boolean cumpreNotaMinima = nota12Candidato >= notaMinimaCurso;
 
         HBox boxQuotas = new HBox(16);
         boxQuotas.setStyle("-fx-background-color: rgba(59, 130, 246, 0.08); -fx-padding: 10px 14px; -fx-background-radius: 8px; -fx-border-color: #93C5FD; -fx-border-radius: 8px;");
@@ -806,8 +832,9 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         Label lblQCarencia = new Label(String.format("🤝 Vagas Carência: %d / %d preenchidas", ocupadasCarencia, vagasCarencia));
         lblQCarencia.setStyle("-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: " + (ocupadasCarencia >= vagasCarencia ? "#EF4444" : "#15803D") + ";");
 
-        Label lblNotaMin = new Label(String.format("📊 Nota 12ª mais baixa no curso: %.1f val (Candidato: %.1f val)", nota12MinCurso, nota12Candidato));
-        lblNotaMin.setStyle("-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: #334155;");
+        Label lblNotaMin = new Label(String.format("📊 Nota Candidato: %.1f val | Mín. Curso: %.1f val (%s)",
+                nota12Candidato, notaMinimaCurso, cumpreNotaMinima ? "✔ Cumpre Requisito" : "✖ Abaixo da Mínima"));
+        lblNotaMin.setStyle("-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: " + (cumpreNotaMinima ? "#15803D" : "#EF4444") + ";");
 
         boxQuotas.getChildren().addAll(lblQMerito, new Separator(javafx.geometry.Orientation.VERTICAL), lblQCarencia, new Separator(javafx.geometry.Orientation.VERTICAL), lblNotaMin);
 
@@ -848,6 +875,16 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 mostrarAviso(String.format("🚫 Limite de vagas por Mérito atingido!\nO curso dispõe de %d vaga(s) por Mérito e todas as %d já foram preenchidas.\nNão é possível aprovar mais por esta modalidade.", fVagasMerito, fOcupadasMerito));
                 return;
             }
+            if (!cumpreNotaMinima) {
+                Alert alertaNota = new Alert(Alert.AlertType.CONFIRMATION);
+                alertaNota.setTitle("Aviso de Requisito de Nota Mínima");
+                alertaNota.setHeaderText("Atenção: Candidato com Nota Inferior ao Requisito do Curso!");
+                alertaNota.setContentText(String.format("A nota do candidato (%.1f valores) é menor do que a nota mínima exigida para este curso (%.1f valores).\n\nRequisito não cumprido!\nDeseja aprovar por mérito excepcionalmente?", nota12Candidato, notaMinimaCurso));
+                Optional<ButtonType> res = alertaNota.showAndWait();
+                if (res.isEmpty() || res.get() != ButtonType.OK) {
+                    return;
+                }
+            }
             inscricaoController.aprovarCandidato(inscricao.getId(), "MERITO");
             mostrarSucesso("Candidato " + candidato.getNomeCompleto() + " APROVADO POR MÉRITO!");
             carregarDados();
@@ -862,6 +899,16 @@ public class TelaDashboardSecretariaFX extends BorderPane {
             if (fOcupadasCarencia >= fVagasCarencia && fVagasCarencia > 0) {
                 mostrarAviso(String.format("🚫 Limite de vagas por Carência atingido!\nO curso dispõe de %d vaga(s) por Carência e todas as %d já foram preenchidas.\nNão é possível aprovar mais por esta modalidade.", fVagasCarencia, fOcupadasCarencia));
                 return;
+            }
+            if (!cumpreNotaMinima) {
+                Alert alertaNota = new Alert(Alert.AlertType.CONFIRMATION);
+                alertaNota.setTitle("Aviso de Nota Mínima em Carência");
+                alertaNota.setHeaderText("Nota Inferior à Mínima do Curso");
+                alertaNota.setContentText(String.format("O candidato possui nota %.1f valores (abaixo da nota mínima exigida de %.1f valores).\n\nDeseja autorizar a admissão por carência social excepcionalmente?", nota12Candidato, notaMinimaCurso));
+                Optional<ButtonType> res = alertaNota.showAndWait();
+                if (res.isEmpty() || res.get() != ButtonType.OK) {
+                    return;
+                }
             }
             if (!cumpreCarencia) {
                 Alert alertaCarencia = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1075,13 +1122,16 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         TableColumn<Curso, String> colMinCarencia = new TableColumn<>("Min. Pontos Carência");
         colMinCarencia.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPontosMinimosCarencia() + " pts"));
 
-        TableColumn<Curso, String> colNota12Min = new TableColumn<>("Nota 12ª Mínima");
+        TableColumn<Curso, String> colNotaMinimaReq = new TableColumn<>("Nota Mínima Requisito");
+        colNotaMinimaReq.setCellValueFactory(c -> new SimpleStringProperty(String.format(Locale.US, "%.1f val", c.getValue().getNotaMinima())));
+
+        TableColumn<Curso, String> colNota12Min = new TableColumn<>("Menor Nota Registada");
         colNota12Min.setCellValueFactory(c -> {
             double min = inscricaoController.buscarNota12MaisBaixaPorCurso(c.getValue().getId());
             return new SimpleStringProperty(min > 0 ? String.format(Locale.US, "%.1f val", min) : "—");
         });
 
-        tabelaCursos.getColumns().addAll(colId, colNome, colVagas, colMerito, colNec, colMinCarencia, colNota12Min);
+        tabelaCursos.getColumns().addAll(colId, colNome, colVagas, colMerito, colNec, colMinCarencia, colNotaMinimaReq, colNota12Min);
         tabelaCursos.setItems(FXCollections.observableArrayList(controller.listarCursos()));
         HBox.setHgrow(tabelaCursos, Priority.ALWAYS);
 
@@ -1111,6 +1161,9 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         TextField txtMinCarencia = new TextField("70");
         txtMinCarencia.setPromptText("Requisito de pontos de carência (ex: 70)");
 
+        TextField txtNotaMinima = new TextField("10.0");
+        txtNotaMinima.setPromptText("Nota Mínima de Ingresso (ex: 12.0)");
+
         Long[] cursoEditandoId = {null};
 
         tabelaCursos.getSelectionModel().selectedItemProperty().addListener((obs, oldC, c) -> {
@@ -1122,6 +1175,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 txtMerito.setText(String.format(Locale.US, "%.0f", c.getPercentualMerito()));
                 txtNec.setText(String.format(Locale.US, "%.0f", c.getPercentualNecessidade()));
                 txtMinCarencia.setText(String.valueOf(c.getPontosMinimosCarencia()));
+                txtNotaMinima.setText(String.format(Locale.US, "%.1f", c.getNotaMinima()));
                 lblNovoCurso.setText("Atualizar Curso: " + c.getNome());
             }
         });
@@ -1142,6 +1196,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
             txtMerito.setText("60");
             txtNec.setText("40");
             txtMinCarencia.setText("70");
+            txtNotaMinima.setText("10.0");
             tabelaCursos.getSelectionModel().clearSelection();
         });
 
@@ -1153,9 +1208,13 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 double merito = Double.parseDouble(txtMerito.getText().trim());
                 double nec = Double.parseDouble(txtNec.getText().trim());
                 int minCar = Integer.parseInt(txtMinCarencia.getText().trim());
+                double notaMin = Double.parseDouble(txtNotaMinima.getText().trim().replace(',', '.'));
 
                 if (nome == null || nome.trim().isEmpty()) {
                     throw new IllegalArgumentException("Nome do curso é obrigatório.");
+                }
+                if (notaMin < 0.0 || notaMin > 20.0) {
+                    throw new IllegalArgumentException("A nota mínima deve estar entre 0 e 20 valores.");
                 }
 
                 Curso c = new Curso();
@@ -1166,6 +1225,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 c.setPercentualMerito(merito);
                 c.setPercentualNecessidade(nec);
                 c.setPontosMinimosCarencia(minCar);
+                c.setNotaMinima(notaMin);
                 c.setDataInicio(LocalDate.now());
                 c.setDataFim(LocalDate.now().plusMonths(3));
 
@@ -1174,7 +1234,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 tabelaCursos.setItems(FXCollections.observableArrayList(controller.listarCursos()));
                 btnLimparForm.fire();
 
-                mostrarSucesso("Curso " + c.getNome() + " salvo com sucesso! Requisito de carência: " + minCar + " pts.");
+                mostrarSucesso("Curso " + c.getNome() + " salvo com sucesso!\n• Nota Mínima: " + String.format(Locale.US, "%.1f", notaMin) + " val\n• Requisito Carência: " + minCar + " pts.");
             } catch (Exception ex) {
                 mostrarAviso("Erro ao salvar curso: " + ex.getMessage());
             }
@@ -1187,6 +1247,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 new Label("Vagas Totais:"), txtVagas,
                 new Label("% Mérito:"), txtMerito,
                 new Label("% Necessidade:"), txtNec,
+                new Label("Nota Mínima Requisito (12ª Classe, 0-20 val):"), txtNotaMinima,
                 new Label("Requisito Mínimo de Pontos de Carência (ex: 70):"), txtMinCarencia,
                 btnSalvarCurso,
                 btnLimparForm
@@ -1260,12 +1321,18 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         // GRÁFICO DE MÉDIAS E PONTOS DE CARÊNCIA
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Candidato");
+        xAxis.setAnimated(false);
+        xAxis.setTickLabelsVisible(true);
+        xAxis.setTickLabelRotation(-35);
         NumberAxis yAxis = new NumberAxis(0, 100, 10);
         yAxis.setLabel("Pontuação");
+        yAxis.setAnimated(false);
+        yAxis.setTickLabelsVisible(true);
 
         BarChart<String, Number> chartEspera = new BarChart<>(xAxis, yAxis);
         chartEspera.setTitle("Comparativo: Pontos de Carência (0-100) vs Média 12ª Classe (escala x5)");
         chartEspera.setPrefHeight(270);
+        chartEspera.setAnimated(false);
         chartEspera.getStyleClass().add("card-clean");
 
         XYChart.Series<String, Number> serieCarencia = new XYChart.Series<>();
@@ -1395,6 +1462,21 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 mostrarAviso("Seleccione um candidato na tabela de lista de espera.");
                 return;
             }
+            double mediaCand = sel.getMedia12();
+            double notaMinCurso = sel.curso != null ? sel.curso.getNotaMinima() : 10.0;
+            if (mediaCand < notaMinCurso) {
+                Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
+                alerta.setTitle("Aviso de Requisito de Nota Mínima");
+                alerta.setHeaderText("Candidato com Nota Inferior ao Requisito do Curso");
+                alerta.setContentText(String.format(
+                        "A nota do candidato (%.1f valores) é inferior à nota mínima exigida para %s (%.1f valores).\n\nDeseja promover este candidato mesmo sem cumprir o requisito de nota mínima?",
+                        mediaCand, sel.getCursoNome(), notaMinCurso
+                ));
+                Optional<ButtonType> res = alerta.showAndWait();
+                if (res.isEmpty() || res.get() != ButtonType.OK) {
+                    return;
+                }
+            }
             inscricaoController.aprovarCandidato(sel.inscricao.getId());
             mostrarSucesso("Candidato " + sel.getNome() + " PROMOVIDO para Aprovado com sucesso!");
             carregarDados();
@@ -1455,12 +1537,18 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         // GRÁFICO DE MÉDIA DE PONTOS DE CARÊNCIA POR CURSO
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Curso");
+        xAxis.setAnimated(false);
+        xAxis.setTickLabelsVisible(true);
+        xAxis.setTickLabelRotation(-35);
         NumberAxis yAxis = new NumberAxis(0, 100, 10);
         yAxis.setLabel("Média de Pontos de Carência");
+        yAxis.setAnimated(false);
+        yAxis.setTickLabelsVisible(true);
 
         BarChart<String, Number> chartCarencia = new BarChart<>(xAxis, yAxis);
         chartCarencia.setTitle("Média de Pontos de Carência dos Admitidos por Curso");
         chartCarencia.setPrefHeight(270);
+        chartCarencia.setAnimated(false);
         chartCarencia.getStyleClass().add("card-clean");
         chartCarencia.setLegendVisible(false);
 

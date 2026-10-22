@@ -21,6 +21,7 @@ public class Curso {
     protected double percentualMerito;
     protected double percentualNecessidade;
     protected int pontosMinimosCarencia = 50;
+    protected double notaMinima = 10.0;
     protected LocalDate dataInicio;
     protected LocalDate dataFim;
 
@@ -80,6 +81,14 @@ public class Curso {
         this.pontosMinimosCarencia = pontosMinimosCarencia;
     }
 
+    public double getNotaMinima() {
+        return notaMinima;
+    }
+
+    public void setNotaMinima(double notaMinima) {
+        this.notaMinima = notaMinima;
+    }
+
     public LocalDate getDataInicio() {
         return dataInicio;
     }
@@ -127,6 +136,6 @@ public class Curso {
 
     @Override
     public String toString() {
-        return nome + " (" + numeroVagas + " vagas - Min. Carência: " + pontosMinimosCarencia + " pts)";
+        return nome + " (" + numeroVagas + " vagas - Nota Mín: " + String.format(java.util.Locale.US, "%.1f", notaMinima) + "v - Min. Carência: " + pontosMinimosCarencia + " pts)";
     }
 }

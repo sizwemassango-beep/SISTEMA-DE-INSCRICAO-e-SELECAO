@@ -670,3 +670,101 @@
 .dark-theme .check-box:selected .mark {
     -fx-background-color: #042F2E;
 }
+
+/* ============================ GRÁFICOS (CHARTS) & EIXOS ============================ */
+.chart {
+    -fx-padding: 10px;
+}
+
+.chart-content {
+    -fx-padding: 8px;
+}
+
+.chart-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.axis {
+    -fx-tick-label-fill: -fx-text-primary;
+    -fx-font-size: 11px;
+}
+
+.axis-label {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.axis .text {
+    -fx-fill: -fx-text-primary;
+    -fx-font-size: 11px;
+}
+
+.axis-tick-mark, .axis-minor-tick-mark {
+    -fx-stroke: -fx-text-secondary;
+}
+
+.chart-pie-label {
+    -fx-fill: -fx-text-primary;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.chart-pie-label-line {
+    -fx-stroke: -fx-text-secondary;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 6px;
+}
+
+.chart-legend-item {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-size: 11px;
+}
+
+.chart-legend-item-symbol {
+    -fx-background-radius: 4px;
+}
+
+.chart-bar {
+    -fx-bar-fill: -fx-primary-color;
+    -fx-background-radius: 4px 4px 0 0;
+}
+
+/* ============================ TEMA ESCURO: GRÁFICOS ============================ */
+.dark-theme .chart-title {
+    -fx-text-fill: #F8FAFC !important;
+}
+
+.dark-theme .axis {
+    -fx-tick-label-fill: #F8FAFC !important;
+}
+
+.dark-theme .axis-label {
+    -fx-text-fill: #F8FAFC !important;
+}
+
+.dark-theme .axis .text {
+    -fx-fill: #F8FAFC !important;
+}
+
+.dark-theme .axis-tick-mark, .dark-theme .axis-minor-tick-mark {
+    -fx-stroke: #94A3B8 !important;
+}
+
+.dark-theme .chart-pie-label {
+    -fx-fill: #F8FAFC !important;
+}
+
+.dark-theme .chart-pie-label-line {
+    -fx-stroke: #94A3B8 !important;
+}
+
+.dark-theme .chart-legend-item {
+    -fx-text-fill: #F8FAFC !important;
+}
+

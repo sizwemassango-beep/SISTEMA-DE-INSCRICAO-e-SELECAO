@@ -67,7 +67,15 @@ public class DashboardService {
     }
 
     public Map<String, Integer> obterCandidatosPorProvincia() {
-        Map<String, Integer> mapa = new TreeMap<>();
+        Map<String, Integer> mapa = new LinkedHashMap<>();
+        String[] provinciasOficiais = {
+                "Cabo Delgado", "Gaza", "Inhambane", "Manica",
+                "Maputo Cidade", "Maputo Província", "Nampula",
+                "Niassa", "Sofala", "Tete", "Zambézia"
+        };
+        for (String p : provinciasOficiais) {
+            mapa.put(p, 0);
+        }
         List<Candidato> candidatos = listarTodosCandidatos();
 
         for (Candidato c : candidatos) {

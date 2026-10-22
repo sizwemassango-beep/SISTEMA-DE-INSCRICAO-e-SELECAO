@@ -17,6 +17,7 @@ import model.QuestionarioCarencia;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
 
@@ -404,7 +405,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
             @Override
             public String toString(Curso c) {
                 if (c == null) return "";
-                return c.getNome() + " (" + c.getNumeroVagas() + " vagas • Min. Carência: " + c.getPontosMinimosCarencia() + " pts)";
+                return c.getNome() + " (" + c.getNumeroVagas() + " vagas • Nota Mín: " + String.format(java.util.Locale.US, "%.1f", c.getNotaMinima()) + "v • Mín. Carência: " + c.getPontosMinimosCarencia() + " pts)";
             }
 
             @Override
@@ -414,10 +415,26 @@ public class TelaNovaInscricaoFX extends BorderPane {
         });
         aplicarEstiloComboBox(cbCurso);
 
+        Label lblInfoRequisitos = new Label("");
+        lblInfoRequisitos.setStyle("-fx-font-size: 11.5px; -fx-text-fill: -fx-primary-color; -fx-font-weight: bold;");
+        lblInfoRequisitos.setVisible(false);
+        lblInfoRequisitos.setManaged(false);
+
+        cbCurso.getSelectionModel().selectedItemProperty().addListener((obs, oldC, c) -> {
+            if (c != null) {
+                lblInfoRequisitos.setText(String.format("📋 Requisitos do curso selecionado: Nota Mínima da 12ª Classe: %.1f valores | Carência Mínima: %d pontos", c.getNotaMinima(), c.getPontosMinimosCarencia()));
+                lblInfoRequisitos.setVisible(true);
+                lblInfoRequisitos.setManaged(true);
+            } else {
+                lblInfoRequisitos.setVisible(false);
+                lblInfoRequisitos.setManaged(false);
+            }
+        });
+
         VBox boxCurso = new VBox(6);
         Label lblCurso = new Label("Curso Desejado *");
         lblCurso.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
-        boxCurso.getChildren().addAll(lblCurso, cbCurso);
+        boxCurso.getChildren().addAll(lblCurso, cbCurso, lblInfoRequisitos);
 
         card.getChildren().addAll(tituloBox, new Separator(), boxCurso);
         return card;
@@ -767,6 +784,19 @@ public class TelaNovaInscricaoFX extends BorderPane {
             );
 
             Curso cursoSelecionado = cbCurso.getValue();
+            if (cursoSelecionado != null && nota12 < cursoSelecionado.getNotaMinima()) {
+                Alert alertaNota = new Alert(Alert.AlertType.CONFIRMATION);
+                alertaNota.setTitle("Aviso de Requisito de Nota Mínima");
+                alertaNota.setHeaderText("Atenção: Nota Inferior ao Requisito do Curso!");
+                alertaNota.setContentText(String.format(
+                        "A sua nota informada da 12ª classe (%.1f valores) é menor do que a nota mínima exigida para o curso %s (%.1f valores).\n\nA sua candidatura poderá ser encaminhada para a lista de espera ou análise especial.\n\nDeseja submeter a candidatura mesmo assim?",
+                        nota12, cursoSelecionado.getNome(), cursoSelecionado.getNotaMinima()
+                ));
+                Optional<ButtonType> res = alertaNota.showAndWait();
+                if (res.isEmpty() || res.get() != ButtonType.OK) {
+                    return;
+                }
+            }
             controller.submeterInscricao(candidato, questionario, cursoSelecionado, nota12);
 
             exibirModalSucesso(candidato);

@@ -210,7 +210,7 @@ public class InscricaoController extends ControllerBase {
     public static boolean isDataNascimentoValida(LocalDate data) {
         if (data == null) return false;
         LocalDate hoje = LocalDate.now();
-        return data.isBefore(hoje.minusYears(14)) && data.isAfter(hoje.minusYears(100));
+        return data.isBefore(hoje.minusYears(16)) && data.isAfter(hoje.minusYears(100));
     }
 
     public static boolean isSenhaValida(String senha) {

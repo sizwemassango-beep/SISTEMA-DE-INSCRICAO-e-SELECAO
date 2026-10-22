@@ -67,6 +67,10 @@ public class DatabaseInitializer {
             } catch (SQLException ignored) {}
 
             try {
+                st.executeUpdate("ALTER TABLE curso ADD COLUMN nota_minima DOUBLE NOT NULL DEFAULT 10.0");
+            } catch (SQLException ignored) {}
+
+            try {
                 st.executeUpdate("ALTER TABLE inscricao ADD COLUMN nota_12 DOUBLE NOT NULL DEFAULT 0.0");
             } catch (SQLException ignored) {}
 

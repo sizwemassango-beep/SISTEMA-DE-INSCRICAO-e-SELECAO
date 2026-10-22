@@ -528,7 +528,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
             }
 
             if (txtMotivacao.getText() == null || txtMotivacao.getText().trim().isEmpty()) {
-                mostrarAlertaErro("A Carta de Motivação deixou de ser opcional e é estritamente obrigatória para submissão.");
+                mostrarAlertaErro("A Carta de Motivação é estritamente obrigatória para submissão, ela serve como criterio de avaliacao, capriche.");
                 return;
             }
 

@@ -20,6 +20,7 @@ public class Curso {
     protected String descricao;
     protected double percentualMerito;
     protected double percentualNecessidade;
+    protected int pontosMinimosCarencia = 50;
     protected LocalDate dataInicio;
     protected LocalDate dataFim;
 
@@ -71,6 +72,14 @@ public class Curso {
         this.percentualNecessidade = percentualNecessidade;
     }
 
+    public int getPontosMinimosCarencia() {
+        return pontosMinimosCarencia;
+    }
+
+    public void setPontosMinimosCarencia(int pontosMinimosCarencia) {
+        this.pontosMinimosCarencia = pontosMinimosCarencia;
+    }
+
     public LocalDate getDataInicio() {
         return dataInicio;
     }
@@ -118,6 +127,6 @@ public class Curso {
 
     @Override
     public String toString() {
-        return nome + " (" + numeroVagas + " vagas)";
+        return nome + " (" + numeroVagas + " vagas - Min. Carência: " + pontosMinimosCarencia + " pts)";
     }
 }

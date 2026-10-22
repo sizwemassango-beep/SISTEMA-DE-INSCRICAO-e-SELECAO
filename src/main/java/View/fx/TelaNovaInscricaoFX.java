@@ -35,6 +35,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
     private ComboBox<String> cbProvincia;
     private TextField txtDistrito;
     private TextField txtMorada;
+    private TextField txtNota12;
 
     private TextField txtEmail;
     private PasswordField txtSenha;
@@ -186,13 +187,18 @@ public class TelaNovaInscricaoFX extends BorderPane {
 
         HBox tituloBox = new HBox(8);
         tituloBox.setAlignment(Pos.CENTER_LEFT);
-        Label lblSecao = new Label("1. Dados Pessoais de Identificação");
+        Label lblSecao = new Label("1. Dados Pessoais & Habilitações de Identificação");
         lblSecao.getStyleClass().add("card-title");
         Button btnAjuda = criarBotaoAjuda(
-                "Dados Pessoais",
+                "Dados Pessoais & BI",
                 "Informe os seus dados exactamente como constam no Bilhete de Identidade (BI).\n\n"
                 + "• Nome Completo: obrigatório, mínimo 2 palavras.\n"
-                + "• Número do BI: máx. 13 caracteres, termina em letra (ex: 110100234567A).\n"
+                + "• Número do BI moçambicano (13 caracteres):\n"
+                + "  - 2 dígitos: Código da província\n"
+                + "  - 2 dígitos: Código do distrito\n"
+                + "  - 8 dígitos: Número de sequência único\n"
+                + "  - 1 letra maiúscula final de controlo (ex: 110100234567A ou 11.01.00234567-A)\n"
+                + "• Nota da 12ª Classe: nota obtida na conclusão da 12ª classe (0 a 20 valores).\n"
                 + "• Data de Nascimento: candidatos com menos de 14 anos não são aceites.\n"
                 + "• Telefone: 9 dígitos, começa por 82, 83, 84, 85, 86 ou 87."
         );
@@ -217,15 +223,15 @@ public class TelaNovaInscricaoFX extends BorderPane {
         });
 
         txtBI = new TextField();
-        txtBI.setPromptText("Ex: 110100234567A");
-        InscricaoController.aplicarFiltroBI(txtBI, 13);
-        adicionarCampoGrid(gridDados, "Número do BI *", txtBI, 0, 1, 1);
+        txtBI.setPromptText("Ex: 110100234567A ou 11.01.00234567-A");
+        InscricaoController.aplicarFiltroBI(txtBI, 16);
+        adicionarCampoGrid(gridDados, "Número do BI (13 caracteres: XX.XX.XXXXXXXX-X) *", txtBI, 0, 1, 1);
         txtBI.focusedProperty().addListener((obs, old, focused) -> {
             if (!focused) {
                 boolean ok = InscricaoController.isBiValido(txtBI.getText());
                 InscricaoController.marcarValidadeCampo(txtBI, ok);
                 if (!ok && txtBI.getText() != null && !txtBI.getText().trim().isEmpty()) {
-                    ComponentesVisuais.mostrarPopupToast(txtBI, "BI inválido: deve conter de 9 a 14 caracteres alfanuméricos.", ComponentesVisuais.TipoMensagem.AVISO);
+                    ComponentesVisuais.mostrarPopupToast(txtBI, "BI moçambicano inválido: deve ter 13 caracteres (2 província, 2 distrito, 8 sequência e 1 letra maiúscula, ex: 110100234567A).", ComponentesVisuais.TipoMensagem.AVISO);
                 }
             }
         });
@@ -272,6 +278,21 @@ public class TelaNovaInscricaoFX extends BorderPane {
         txtMorada = new TextField();
         txtMorada.setPromptText("Bairro, Avenida, Rua, Número");
         adicionarCampoGrid(gridDados, "Morada / Endereço", txtMorada, 1, 3, 1);
+
+        // Novo campo: Nota da 12ª Classe
+        txtNota12 = new TextField();
+        txtNota12.setPromptText("Ex: 14.5 (escala de 0 a 20 valores)");
+        InscricaoController.aplicarFiltroNumericoDecimal(txtNota12, 20.0);
+        adicionarCampoGrid(gridDados, "Nota da 12ª Classe (0 a 20) *", txtNota12, 0, 4, 2);
+        txtNota12.focusedProperty().addListener((obs, old, focused) -> {
+            if (!focused) {
+                boolean ok = InscricaoController.isNota12Valida(txtNota12.getText());
+                InscricaoController.marcarValidadeCampo(txtNota12, ok);
+                if (!ok && txtNota12.getText() != null && !txtNota12.getText().trim().isEmpty()) {
+                    ComponentesVisuais.mostrarPopupToast(txtNota12, "Nota inválida: informe a nota média da 12ª classe entre 0 e 20 valores.", ComponentesVisuais.TipoMensagem.AVISO);
+                }
+            }
+        });
 
         card.getChildren().addAll(tituloBox, new Separator(), gridDados);
         return card;
@@ -372,7 +393,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
                 "Curso Pretendido",
                 "Seleccione o curso preparatório a que deseja candidatar-se.\n\n"
                 + "• A escolha é vinculativa para este processo.\n"
-                + "• O número entre parênteses indica as vagas disponíveis.\n"
+                + "• O número entre parênteses indica as vagas disponíveis e os pontos de carência exigidos.\n"
                 + "• Apenas pode candidatar-se a um curso por processo seletivo."
         );
         tituloBox.getChildren().addAll(lblSecao, btnAjuda);
@@ -385,7 +406,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
             @Override
             public String toString(Curso c) {
                 if (c == null) return "";
-                return c.getNome() + " (" + c.getNumeroVagas() + " vagas)";
+                return c.getNome() + " (" + c.getNumeroVagas() + " vagas • Min. Carência: " + c.getPontosMinimosCarencia() + " pts)";
             }
 
             @Override
@@ -647,6 +668,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
             String provincia = cbProvincia.getValue();
             String distrito = txtDistrito.getText() != null ? txtDistrito.getText().trim() : "";
             String morada = txtMorada.getText() != null ? txtMorada.getText().trim() : "";
+            String nota12Str = txtNota12.getText() != null ? txtNota12.getText().trim() : "";
 
             String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
             String senha = obterSenhaAtual(txtSenha, txtSenhaVisivel);
@@ -689,6 +711,14 @@ public class TelaNovaInscricaoFX extends BorderPane {
                 return;
             }
 
+            if (!InscricaoController.isNota12Valida(nota12Str)) {
+                InscricaoController.marcarValidadeCampo(txtNota12, false);
+                mostrarAviso("A nota da 12ª classe é obrigatória e deve estar entre 0 e 20 valores (ex: 14.5).");
+                return;
+            } else {
+                InscricaoController.marcarValidadeCampo(txtNota12, true);
+            }
+
             if (!InscricaoController.isEmailValido(email)) {
                 InscricaoController.marcarValidadeCampo(txtEmail, false);
                 valido = false;
@@ -718,8 +748,11 @@ public class TelaNovaInscricaoFX extends BorderPane {
                 }
             } catch (NumberFormatException ignored) {}
 
+            double nota12 = Double.parseDouble(nota12Str.replace(',', '.'));
+            String biNormalizado = InscricaoController.normalizarBI(bi);
+
             Candidato candidato = new Candidato(nome, email, senha);
-            candidato.setNumeroBI(bi);
+            candidato.setNumeroBI(biNormalizado);
             candidato.setDataDeNascimento(dataNasc);
             candidato.setTelefone(telefone);
             candidato.setProvincia(provincia);
@@ -736,7 +769,7 @@ public class TelaNovaInscricaoFX extends BorderPane {
             );
 
             Curso cursoSelecionado = cbCurso.getValue();
-            controller.submeterInscricao(candidato, questionario, cursoSelecionado);
+            controller.submeterInscricao(candidato, questionario, cursoSelecionado, nota12);
 
             exibirModalSucesso(candidato);
 

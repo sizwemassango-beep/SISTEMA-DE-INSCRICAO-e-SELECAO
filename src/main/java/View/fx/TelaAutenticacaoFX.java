@@ -115,7 +115,6 @@ public class TelaAutenticacaoFX extends BorderPane {
         HBox container = new HBox();
         container.setAlignment(Pos.CENTER);
 
-        // Lado Esquerdo: Banner institucional com o Logo estilizado
         VBox banner = new VBox(24);
         banner.setPrefWidth(440);
         banner.setAlignment(Pos.CENTER);
@@ -142,7 +141,6 @@ public class TelaAutenticacaoFX extends BorderPane {
 
         banner.getChildren().addAll(logoGrande, lblTitulo, lblSub, boxBeneficios);
 
-        // Lado Direito: Card de Login / Sign Up
         VBox areaDireita = new VBox(16);
         areaDireita.setAlignment(Pos.CENTER);
         areaDireita.setPadding(new Insets(30, 48, 30, 48));
@@ -154,7 +152,6 @@ public class TelaAutenticacaoFX extends BorderPane {
         card.setMaxWidth(580);
         card.setAlignment(Pos.TOP_LEFT);
 
-        // Abas: Iniciar Sessão vs Criar Conta (Candidato)
         HBox abas = new HBox(12);
         btnAbaLogin = new Button("Iniciar Sessão");
         btnAbaLogin.getStyleClass().addAll("tab-seletor", "tab-seletor-ativa");
@@ -234,36 +231,39 @@ public class TelaAutenticacaoFX extends BorderPane {
         txtSenha.textProperty().bindBidirectional(txtSenhaVisivel.textProperty());
 
         Button btnOlho = new Button("👁");
-        btnOlho.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 13px; -fx-padding: 4px 8px; -fx-text-fill: -fx-text-secondary;");
+        btnOlho.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 2px 8px; -fx-text-fill: -fx-text-secondary;");
         btnOlho.setOnAction(ev -> {
             boolean mostrar = !txtSenhaVisivel.isVisible();
             txtSenha.setVisible(!mostrar);
             txtSenha.setManaged(!mostrar);
             txtSenhaVisivel.setVisible(mostrar);
             txtSenhaVisivel.setManaged(mostrar);
-            btnOlho.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 13px; -fx-padding: 4px 8px; -fx-text-fill: " + (mostrar ? "#2563EB;" : "-fx-text-secondary;"));
+            btnOlho.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 2px 8px; -fx-text-fill: " + (mostrar ? "#2563EB;" : "-fx-text-secondary;"));
         });
 
-        HBox boxSenhaRow = new HBox(2, txtSenha, txtSenhaVisivel, btnOlho);
-        boxSenhaRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        boxSenhaRow.setStyle("-fx-background-color: -fx-surface-color; -fx-border-color: -fx-border-color-default; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+        HBox boxInputSenha = new HBox(4, txtSenha, txtSenhaVisivel, btnOlho);
+        boxInputSenha.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        boxInputSenha.setStyle("-fx-background-color: -fx-surface-color; -fx-border-color: -fx-border-color-default; -fx-border-radius: 8px; -fx-background-radius: 8px;");
         HBox.setHgrow(txtSenha, Priority.ALWAYS);
         HBox.setHgrow(txtSenhaVisivel, Priority.ALWAYS);
+        txtSenha.setMaxWidth(Double.MAX_VALUE);
+        txtSenhaVisivel.setMaxWidth(Double.MAX_VALUE);
 
-        boxSenha.getChildren().addAll(lblSenha, boxSenhaRow);
+        boxSenha.getChildren().addAll(lblSenha, boxInputSenha);
 
         campoFocoPrincipal = txtEmail;
         alternadorSenhaAtual = () -> btnOlho.fire();
 
-        Button btnEntrar = new Button("Entrar no Sistema");
+        Button btnEntrar = new Button("Aceder ao Sistema →");
         btnEntrar.getStyleClass().add("button-primary");
         btnEntrar.setMaxWidth(Double.MAX_VALUE);
+
         btnEntrar.setOnAction(e -> {
             String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
-            String senha = txtSenha.getText() != null ? txtSenha.getText() : "";
+            String senha = txtSenha.isVisible() ? txtSenha.getText() : txtSenhaVisivel.getText();
 
             if (email.isEmpty() || senha.isEmpty()) {
-                mostrarAviso("Por favor, preencha o email e a senha.", false);
+                mostrarAviso("Por favor, preencha o seu email e senha de acesso.", false);
                 return;
             }
 
@@ -309,9 +309,9 @@ public class TelaAutenticacaoFX extends BorderPane {
         adicionarCampoGrid(grid, "Nome Completo *", txtNome, 0, 0, 2);
 
         TextField txtBI = new TextField();
-        txtBI.setPromptText("Ex: 110100234567A");
-        InscricaoController.aplicarFiltroBI(txtBI, 13);
-        adicionarCampoGrid(grid, "Número do BI *", txtBI, 0, 1, 1);
+        txtBI.setPromptText("Ex: 110100234567A ou 11.01.00234567-A");
+        InscricaoController.aplicarFiltroBI(txtBI, 16);
+        adicionarCampoGrid(grid, "Número do BI (13 caracteres: XX.XX.XXXXXXXX-X) *", txtBI, 0, 1, 1);
 
         DatePicker dpNasc = new DatePicker(LocalDate.of(2004, 1, 1));
         dpNasc.setMaxWidth(Double.MAX_VALUE);
@@ -334,7 +334,6 @@ public class TelaAutenticacaoFX extends BorderPane {
         txtEmail.setPromptText("seuemail@exemplo.com");
         adicionarCampoGrid(grid, "Email de Acesso *", txtEmail, 0, 3, 2);
 
-        // Campo Senha Unificado com Botão de Visibilidade Embutido
         PasswordField txtSenha = new PasswordField();
         txtSenha.setPromptText("Mínimo 6 caracteres");
         txtSenha.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 8px 10px;");
@@ -361,7 +360,6 @@ public class TelaAutenticacaoFX extends BorderPane {
         HBox.setHgrow(txtSenhaVis, Priority.ALWAYS);
         adicionarCampoGrid(grid, "Senha *", boxSenhaRow, 0, 4, 1);
 
-        // Campo Confirmar Senha Unificado com Botão de Visibilidade Embutido
         PasswordField txtConfirmar = new PasswordField();
         txtConfirmar.setPromptText("Repita a senha");
         txtConfirmar.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 8px 10px;");
@@ -394,6 +392,12 @@ public class TelaAutenticacaoFX extends BorderPane {
             btnOlhoConf.fire();
         };
 
+        // Novo campo: Nota da 12ª Classe
+        TextField txtNota12 = new TextField();
+        txtNota12.setPromptText("Ex: 14.5 (escala de 0 a 20 valores)");
+        InscricaoController.aplicarFiltroNumericoDecimal(txtNota12, 20.0);
+        adicionarCampoGrid(grid, "Nota da 12ª Classe (0 a 20) *", txtNota12, 0, 5, 2);
+
         ComboBox<Curso> cbCurso = new ComboBox<>(FXCollections.observableArrayList(inscricaoController.listarCursosDisponiveis()));
         cbCurso.setMaxWidth(Double.MAX_VALUE);
         cbCurso.setPromptText("Selecione o Curso Pretendido");
@@ -401,7 +405,7 @@ public class TelaAutenticacaoFX extends BorderPane {
             @Override
             public String toString(Curso c) {
                 if (c == null) return "";
-                return c.getNome() + " (" + c.getNumeroVagas() + " vagas)";
+                return c.getNome() + " (" + c.getNumeroVagas() + " vagas • Min. Carência: " + c.getPontosMinimosCarencia() + " pts)";
             }
             @Override
             public Curso fromString(String string) { return null; }
@@ -409,7 +413,7 @@ public class TelaAutenticacaoFX extends BorderPane {
         if (!cbCurso.getItems().isEmpty()) {
             cbCurso.setValue(cbCurso.getItems().get(0));
         }
-        adicionarCampoGrid(grid, "Curso Pretendido *", cbCurso, 0, 5, 2);
+        adicionarCampoGrid(grid, "Curso Pretendido *", cbCurso, 0, 6, 2);
 
         // --- Seção Questionário de Carência Socioeconómica ---
         Label lblSecaoQuest = new Label("Questionário de Carência Socioeconómica");
@@ -456,11 +460,9 @@ public class TelaAutenticacaoFX extends BorderPane {
         boxChecks.getChildren().addAll(chkOrfao, chkApoio);
         gridQuest.add(boxChecks, 1, 1);
 
-        // Indicador em tempo real da pontuação de carência estimada
         Label lblPrevia = new Label();
         lblPrevia.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1D4ED8; -fx-background-color: #EFF6FF; -fx-padding: 8px 12px; -fx-background-radius: 6px;");
 
-        // Mensagem de validação dinâmica em tempo real
         Label lblValidacaoAoVivo = new Label();
         lblValidacaoAoVivo.setWrapText(true);
         lblValidacaoAoVivo.setMaxWidth(Double.MAX_VALUE);
@@ -469,7 +471,7 @@ public class TelaAutenticacaoFX extends BorderPane {
         Button btnCadastrar = new Button("Concluir Inscrição de Candidato");
         btnCadastrar.getStyleClass().add("button-primary");
         btnCadastrar.setMaxWidth(Double.MAX_VALUE);
-        btnCadastrar.setDisable(true); // Começa desabilitado até preencher os campos válidos!
+        btnCadastrar.setDisable(true);
 
         Runnable validarFormularioEmTempoReal = () -> {
             String nome = txtNome.getText() != null ? txtNome.getText().trim() : "";
@@ -478,6 +480,7 @@ public class TelaAutenticacaoFX extends BorderPane {
             String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
             String senha = txtSenha.getText() != null ? txtSenha.getText() : "";
             String confirmar = txtConfirmar.getText() != null ? txtConfirmar.getText() : "";
+            String nota12Str = txtNota12.getText() != null ? txtNota12.getText().trim() : "";
             LocalDate dataNasc = dpNasc.getValue();
 
             boolean nomeOk = InscricaoController.isNomeValido(nome);
@@ -487,6 +490,7 @@ public class TelaAutenticacaoFX extends BorderPane {
             boolean senhaOk = InscricaoController.isSenhaValida(senha);
             boolean confirmarOk = !senha.isEmpty() && senha.equals(confirmar);
             boolean dataOk = InscricaoController.isDataNascimentoValida(dataNasc);
+            boolean nota12Ok = InscricaoController.isNota12Valida(nota12Str);
 
             InscricaoController.marcarValidadeCampo(txtNome, nome.isEmpty() || nomeOk);
             InscricaoController.marcarValidadeCampo(txtBI, bi.isEmpty() || biOk);
@@ -494,6 +498,7 @@ public class TelaAutenticacaoFX extends BorderPane {
             InscricaoController.marcarValidadeCampo(txtEmail, email.isEmpty() || emailOk);
             InscricaoController.marcarValidadeCampo(txtSenha, senha.isEmpty() || senhaOk);
             InscricaoController.marcarValidadeCampo(txtConfirmar, confirmar.isEmpty() || confirmarOk);
+            InscricaoController.marcarValidadeCampo(txtNota12, nota12Str.isEmpty() || nota12Ok);
 
             if (nome.isEmpty()) {
                 lblValidacaoAoVivo.setText("ℹ Preencha o nome completo (nome e apelido).");
@@ -508,7 +513,7 @@ public class TelaAutenticacaoFX extends BorderPane {
                 return;
             }
             if (!biOk) {
-                lblValidacaoAoVivo.setText("⚠ O número do BI deve ter pelo menos 9 caracteres alfanuméricos.");
+                lblValidacaoAoVivo.setText("⚠ BI moçambicano inválido: deve ter 13 caracteres (2 província, 2 distrito, 8 sequência e 1 letra maiúscula, ex: 110100234567A).");
                 lblValidacaoAoVivo.setStyle("-fx-text-fill: #B91C1C; -fx-background-color: #FEE2E2;");
                 btnCadastrar.setDisable(true);
                 return;
@@ -521,6 +526,12 @@ public class TelaAutenticacaoFX extends BorderPane {
             }
             if (!telOk) {
                 lblValidacaoAoVivo.setText("⚠ Celular incompleto: deve conter exatamente 9 dígitos (ex: 841234567).");
+                lblValidacaoAoVivo.setStyle("-fx-text-fill: #B91C1C; -fx-background-color: #FEE2E2;");
+                btnCadastrar.setDisable(true);
+                return;
+            }
+            if (!nota12Ok) {
+                lblValidacaoAoVivo.setText("⚠ Digite a nota média da 12ª classe (escala de 0 a 20 valores).");
                 lblValidacaoAoVivo.setStyle("-fx-text-fill: #B91C1C; -fx-background-color: #FEE2E2;");
                 btnCadastrar.setDisable(true);
                 return;
@@ -544,19 +555,18 @@ public class TelaAutenticacaoFX extends BorderPane {
                 return;
             }
 
-            // Se todas as regras passaram com sucesso:
             lblValidacaoAoVivo.setText("✓ Dados validados com sucesso! Pode avançar com a submissão.");
             lblValidacaoAoVivo.setStyle("-fx-text-fill: #15803D; -fx-background-color: #DCFCE7;");
             btnCadastrar.setDisable(false);
         };
 
-        // Adiciona listeners para validar imediatamente a cada tecla digitada
         txtNome.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
         txtBI.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
         txtTelefone.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
         txtEmail.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
         txtSenha.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
         txtConfirmar.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
+        txtNota12.textProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
         dpNasc.valueProperty().addListener((o, a, b) -> validarFormularioEmTempoReal.run());
 
         Runnable atualizarPrevia = () -> {
@@ -598,8 +608,9 @@ public class TelaAutenticacaoFX extends BorderPane {
                 String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
                 String senha = txtSenha.getText();
                 String confirmar = txtConfirmar.getText();
+                String nota12Str = txtNota12.getText() != null ? txtNota12.getText().trim() : "";
 
-                if (nome.isEmpty() || bi.isEmpty() || email.isEmpty() || senha == null || senha.isEmpty()) {
+                if (nome.isEmpty() || bi.isEmpty() || email.isEmpty() || senha == null || senha.isEmpty() || nota12Str.isEmpty()) {
                     mostrarAviso("Preencha todos os campos obrigatórios (*).", false);
                     return;
                 }
@@ -621,8 +632,11 @@ public class TelaAutenticacaoFX extends BorderPane {
                     return;
                 }
 
+                double nota12 = Double.parseDouble(nota12Str.replace(',', '.'));
+                String biNormalizado = InscricaoController.normalizarBI(bi);
+
                 Candidato c = new Candidato(nome, email, senha);
-                c.setNumeroBI(bi);
+                c.setNumeroBI(biNormalizado);
                 c.setDataDeNascimento(dpNasc.getValue());
                 c.setTelefone(txtTelefone.getText());
                 c.setProvincia(cbProvincia.getValue());
@@ -636,7 +650,7 @@ public class TelaAutenticacaoFX extends BorderPane {
                         chkApoio.isSelected()
                 );
 
-                inscricaoController.submeterInscricao(c, q, cbCurso.getValue());
+                inscricaoController.submeterInscricao(c, q, cbCurso.getValue(), nota12);
 
                 mostrarAviso("Candidatura submetida e conta criada com sucesso!", true);
                 Navegador.irParaDashboardCandidato(c);

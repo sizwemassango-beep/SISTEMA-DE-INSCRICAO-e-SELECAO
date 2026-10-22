@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 public class InscricaoController extends ControllerBase {
 
     private static final Pattern REGEX_EMAIL = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-    private static final Pattern REGEX_BI = Pattern.compile("^[0-9]{11,12}[A-Za-z]$");
+    private static final Pattern REGEX_BI_NORMALIZADO = Pattern.compile("^[0-9]{12,13}[A-Z]$");
     private static final Pattern REGEX_TELEFONE = Pattern.compile("^(82|83|84|85|86|87)[0-9]{7}$");
 
     private final InscricaoService inscricaoService;
@@ -54,7 +54,11 @@ public class InscricaoController extends ControllerBase {
     }
 
     public void submeterInscricao(Candidato candidato, QuestionarioCarencia questionario, Curso curso) throws IllegalArgumentException {
-        inscricaoService.processarNovaInscricao(candidato, questionario, curso);
+        inscricaoService.processarNovaInscricao(candidato, questionario, curso, 0.0);
+    }
+
+    public void submeterInscricao(Candidato candidato, QuestionarioCarencia questionario, Curso curso, double nota12) throws IllegalArgumentException {
+        inscricaoService.processarNovaInscricao(candidato, questionario, curso, nota12);
     }
 
     public void gerarComprovativoPdf(Candidato candidato, File destino) throws IOException, DocumentException {
@@ -110,11 +114,17 @@ public class InscricaoController extends ControllerBase {
 
     public void submeterDocumentos(Long inscricaoId, String docIdentificacao, String docCertificado10,
                                    String docCertificado12OuRecibo, String tipoComprovativo12,
-                                   String cartaMotivacao) {
+                                   String docAtestadoPobreza, String cartaMotivacao) {
         inscricaoService.getInscricaoDao().submeterDocumentos(
                 inscricaoId, docIdentificacao, docCertificado10,
-                docCertificado12OuRecibo, tipoComprovativo12, cartaMotivacao
+                docCertificado12OuRecibo, tipoComprovativo12, docAtestadoPobreza, cartaMotivacao
         );
+    }
+
+    public void submeterDocumentos(Long inscricaoId, String docIdentificacao, String docCertificado10,
+                                   String docCertificado12OuRecibo, String tipoComprovativo12,
+                                   String cartaMotivacao) {
+        submeterDocumentos(inscricaoId, docIdentificacao, docCertificado10, docCertificado12OuRecibo, tipoComprovativo12, null, cartaMotivacao);
     }
 
     public List<Inscricao> listarTodasInscricoes() {
@@ -132,10 +142,23 @@ public class InscricaoController extends ControllerBase {
         return limpo.length() == 9;
     }
 
+    /**
+     * Validação do Bilhete de Identidade (BI) em Moçambique:
+     * Composto por 13 caracteres (ou formatado XX.XX.XXXXXXXX-X):
+     * - 2 primeiros dígitos: Código da província de emissão/registo
+     * - 2 dígitos seguintes: Código do distrito
+     * - 8 dígitos seguintes: Número de sequência único
+     * - 1 letra final maiúscula: Dígito verificador / controlo
+     */
     public static boolean isBiValido(String bi) {
         if (bi == null) return false;
-        String limpo = bi.trim();
-        return limpo.length() >= 9 && limpo.length() <= 14;
+        String limpo = bi.trim().replaceAll("[.\\-\\s]", "").toUpperCase();
+        return REGEX_BI_NORMALIZADO.matcher(limpo).matches();
+    }
+
+    public static String normalizarBI(String bi) {
+        if (bi == null) return "";
+        return bi.trim().replaceAll("[.\\-\\s]", "").toUpperCase();
     }
 
     public static boolean isNomeValido(String nome) {
@@ -158,6 +181,20 @@ public class InscricaoController extends ControllerBase {
         return distanciaKm >= 0.0 && distanciaKm <= 2000.0;
     }
 
+    public static boolean isNota12Valida(String notaStr) {
+        if (notaStr == null || notaStr.trim().isEmpty()) return false;
+        try {
+            double val = Double.parseDouble(notaStr.trim().replace(',', '.'));
+            return val >= 0.0 && val <= 20.0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static boolean isNota12Valida(double nota) {
+        return nota >= 0.0 && nota <= 20.0;
+    }
+
     public static void aplicarFiltroCelular(TextField textField, int maxDigitos) {
         UnaryOperator<TextFormatter.Change> filtro = change -> {
             String novoTexto = change.getControlNewText();
@@ -175,10 +212,11 @@ public class InscricaoController extends ControllerBase {
             if (novoTexto.isEmpty()) {
                 return change;
             }
-            if (novoTexto.matches("\\d*(\\.\\d*)?")) {
+            if (novoTexto.matches("\\d*([.,]\\d*)?")) {
                 try {
-                    if (!novoTexto.equals(".")) {
-                        double val = Double.parseDouble(novoTexto);
+                    String normalizado = novoTexto.replace(',', '.');
+                    if (!normalizado.equals(".")) {
+                        double val = Double.parseDouble(normalizado);
                         if (val <= maxValor) {
                             return change;
                         }
@@ -197,7 +235,7 @@ public class InscricaoController extends ControllerBase {
     public static void aplicarFiltroBI(TextField textField, int maxChars) {
         UnaryOperator<TextFormatter.Change> filtro = change -> {
             String novoTexto = change.getControlNewText();
-            if (novoTexto.length() <= maxChars) {
+            if (novoTexto.length() <= 16) {
                 change.setText(change.getText().toUpperCase());
                 return change;
             }

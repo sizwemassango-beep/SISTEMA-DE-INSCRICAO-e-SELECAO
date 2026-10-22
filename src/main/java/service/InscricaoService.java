@@ -33,10 +33,14 @@ public class InscricaoService {
     }
 
     public void processarNovaInscricao(Candidato candidato, QuestionarioCarencia questionario) throws IllegalArgumentException {
-        processarNovaInscricao(candidato, questionario, null);
+        processarNovaInscricao(candidato, questionario, null, 0.0);
     }
 
     public void processarNovaInscricao(Candidato candidato, QuestionarioCarencia questionario, Curso curso) throws IllegalArgumentException {
+        processarNovaInscricao(candidato, questionario, curso, 0.0);
+    }
+
+    public void processarNovaInscricao(Candidato candidato, QuestionarioCarencia questionario, Curso curso, double nota12) throws IllegalArgumentException {
         if (candidato.getNomeCompleto() == null || candidato.getNomeCompleto().trim().isEmpty()) {
             throw new IllegalArgumentException("O nome completo é obrigatório.");
         }
@@ -72,7 +76,8 @@ public class InscricaoService {
             inscricao.setCandidato(candidato);
             inscricao.setDataInscricao(LocalDate.now());
             inscricao.setStatus(StatusInscricao.PENDENTE);
-            inscricao.setNota(questionario != null ? questionario.calcularPontuacao() : 0.0);
+            inscricao.setNota(nota12 > 0 ? nota12 : (questionario != null ? questionario.calcularPontuacao() : 0.0));
+            inscricao.setNota12(nota12);
             inscricao.setDocumentosSubmetidos(false);
             inscricao.setDocumentosValidados(false);
             if (curso != null) {

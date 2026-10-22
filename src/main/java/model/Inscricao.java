@@ -20,6 +20,7 @@ public class Inscricao {
     protected String cursoNome;
     protected Curso curso;
     protected double nota;
+    protected double nota12 = 0.0;
     protected StatusInscricao status = StatusInscricao.PENDENTE;
     protected LocalDate dataInscricao;
     protected boolean documentosSubmetidos;
@@ -28,6 +29,7 @@ public class Inscricao {
     protected String docCertificado10;
     protected String docCertificado12OuRecibo;
     protected String tipoComprovativo12 = "Certificado de Conclusão";
+    protected String docAtestadoPobreza;
     protected String cartaMotivacao;
     protected String motivoRejeicao;
 
@@ -81,6 +83,14 @@ public class Inscricao {
 
     public void setNota(double nota) {
         this.nota = nota;
+    }
+
+    public double getNota12() {
+        return nota12;
+    }
+
+    public void setNota12(double nota12) {
+        this.nota12 = nota12;
     }
 
     public StatusInscricao getStatus() {
@@ -147,6 +157,14 @@ public class Inscricao {
         this.tipoComprovativo12 = tipoComprovativo12;
     }
 
+    public String getDocAtestadoPobreza() {
+        return docAtestadoPobreza;
+    }
+
+    public void setDocAtestadoPobreza(String docAtestadoPobreza) {
+        this.docAtestadoPobreza = docAtestadoPobreza;
+    }
+
     public String getCartaMotivacao() {
         return cartaMotivacao;
     }
@@ -194,6 +212,7 @@ public class Inscricao {
                 ", candidato=" + candidato +
                 ", cursoNome='" + cursoNome + '\'' +
                 ", nota=" + nota +
+                ", nota12=" + nota12 +
                 ", status=" + status +
                 ", dataInscricao=" + dataInscricao +
                 ", documentosSubmetidos=" + documentosSubmetidos +

@@ -36,11 +36,15 @@ public class CursoDao implements Tabela<Curso> {
                 + "percentual_merito DECIMAL(5,2) NOT NULL, "
                 + "percentual_necessidade DECIMAL(5,2) NOT NULL, "
                 + "inicio_inscricoes DATE NOT NULL, "
-                + "fim_inscricoes DATE NOT NULL)";
+                + "fim_inscricoes DATE NOT NULL, "
+                + "pontos_minimos_carencia INT NOT NULL DEFAULT 50)";
 
         try (Connection conn = conexao.getConexao();
              Statement st = conn.createStatement()) {
             st.executeUpdate(sql);
+            try {
+                st.executeUpdate("ALTER TABLE curso ADD COLUMN pontos_minimos_carencia INT NOT NULL DEFAULT 50");
+            } catch (SQLException ignored) {}
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao criar tabela curso", e);
         }
@@ -49,8 +53,8 @@ public class CursoDao implements Tabela<Curso> {
     @Override
     public void salvar(Curso curso) {
         String sql = "INSERT INTO curso (nome, descricao, numero_vagas, percentual_merito, "
-                + "percentual_necessidade, inicio_inscricoes, fim_inscricoes) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "percentual_necessidade, inicio_inscricoes, fim_inscricoes, pontos_minimos_carencia) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = conexao.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -105,13 +109,13 @@ public class CursoDao implements Tabela<Curso> {
     @Override
     public void atualizar(Curso curso) {
         String sql = "UPDATE curso SET nome = ?, descricao = ?, numero_vagas = ?, percentual_merito = ?, "
-                + "percentual_necessidade = ?, inicio_inscricoes = ?, fim_inscricoes = ? WHERE id = ?";
+                + "percentual_necessidade = ?, inicio_inscricoes = ?, fim_inscricoes = ?, pontos_minimos_carencia = ? WHERE id = ?";
 
         try (Connection conn = conexao.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             preencher(ps, curso);
-            ps.setLong(8, curso.getId());
+            ps.setLong(9, curso.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar curso", e);
@@ -156,6 +160,7 @@ public class CursoDao implements Tabela<Curso> {
         ps.setDouble(5, curso.getPercentualNecessidade());
         ps.setDate(6, Date.valueOf(curso.getDataInicio()));
         ps.setDate(7, Date.valueOf(curso.getDataFim()));
+        ps.setInt(8, curso.getPontosMinimosCarencia());
     }
 
     private Curso mapear(ResultSet rs) throws SQLException {
@@ -168,6 +173,11 @@ public class CursoDao implements Tabela<Curso> {
         curso.setPercentualNecessidade(rs.getDouble("percentual_necessidade"));
         curso.setDataInicio(rs.getDate("inicio_inscricoes").toLocalDate());
         curso.setDataFim(rs.getDate("fim_inscricoes").toLocalDate());
+        try {
+            curso.setPontosMinimosCarencia(rs.getInt("pontos_minimos_carencia"));
+        } catch (SQLException e) {
+            curso.setPontosMinimosCarencia(50);
+        }
         return curso;
     }
 }

@@ -18,7 +18,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -118,6 +117,26 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         boxConteudoDinamico.getChildren().clear();
 
         VBox cardHero = criarCardHeroStatus();
+
+        // Se o candidato foi rejeitado / não aprovado, exibe aviso com o motivo
+        if (inscricaoAtual != null && inscricaoAtual.getStatus() == StatusInscricao.NAO_APROVADO) {
+            VBox cardMotivo = new VBox(8);
+            cardMotivo.setStyle("-fx-background-color: #FEF2F2; -fx-border-color: #EF4444; -fx-border-width: 2px; -fx-border-radius: 12px; -fx-background-radius: 12px; -fx-padding: 16px;");
+            Label lblMotTit = new Label("✖ Candidatura Não Admitida — Informação de Rejeição");
+            lblMotTit.setStyle("-fx-font-weight: 800; -fx-font-size: 14px; -fx-text-fill: #991B1B;");
+            String motivo = inscricaoAtual.getMotivoRejeicao() != null && !inscricaoAtual.getMotivoRejeicao().trim().isEmpty()
+                    ? inscricaoAtual.getMotivoRejeicao()
+                    : "Candidato não preencheu os requisitos de admissão ou vaga ocupada por concorrência.";
+            Label lblMotDesc = new Label("Motivo da Não Admissão:\n" + motivo);
+            lblMotDesc.setStyle("-fx-font-size: 13px; -fx-text-fill: #7F1D1D; -fx-font-weight: 600;");
+            lblMotDesc.setWrapText(true);
+            cardMotivo.getChildren().addAll(lblMotTit, lblMotDesc);
+            boxConteudoDinamico.getChildren().add(cardHero);
+            boxConteudoDinamico.getChildren().add(cardMotivo);
+        } else {
+            boxConteudoDinamico.getChildren().add(cardHero);
+        }
+
         VBox cardProgresso = criarCardProgresso();
 
         HBox boxDuasColunas = new HBox(20);
@@ -134,7 +153,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         VBox cardDocumentos = criarCardDocumentos();
         VBox cardAcoes = criarCardAcoes();
 
-        boxConteudoDinamico.getChildren().addAll(cardHero, cardProgresso, boxDuasColunas, cardDocumentos, cardAcoes);
+        boxConteudoDinamico.getChildren().addAll(cardProgresso, boxDuasColunas, cardDocumentos, cardAcoes);
     }
 
     private VBox criarCardHeroStatus() {
@@ -185,7 +204,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
                 lblStatusBadge.setStyle("-fx-background-color: #0284C7; -fx-text-fill: #FFFFFF; -fx-font-weight: 800; -fx-font-size: 12px; -fx-padding: 7px 16px; -fx-background-radius: 20px;");
             }
             case NAO_APROVADO -> {
-                lblStatusBadge.setText("✖ NÃO CLASSIFICADO");
+                lblStatusBadge.setText("✖ NÃO ADMITIDO");
                 lblStatusBadge.setStyle("-fx-background-color: #EF4444; -fx-text-fill: #FFFFFF; -fx-font-weight: 800; -fx-font-size: 12px; -fx-padding: 7px 16px; -fx-background-radius: 20px;");
             }
             default -> {
@@ -204,8 +223,10 @@ public class TelaDashboardCandidatoFX extends BorderPane {
             case APROVADO -> lblStatusDescricao.setText("Parabéns! A sua candidatura foi APROVADA. Descarregue o seu comprovativo oficial em PDF abaixo e dirija-se à secretaria académica para efetuar a matrícula.");
             case LISTA_ESPERA -> lblStatusDescricao.setText("A sua candidatura foi avaliada e encontra-se em LISTA DE ESPERA. Em caso de desistências ou novas vagas, a secretaria entrará em contacto pelos meios indicados.");
             case NAO_APROVADO -> {
-                String motivo = inscricaoAtual != null && inscricaoAtual.getMotivoRejeicao() != null ? " Motivo: " + inscricaoAtual.getMotivoRejeicao() : "";
-                lblStatusDescricao.setText("A sua candidatura não foi classificada no número de vagas disponibilizadas para este ciclo." + motivo);
+                String motivo = inscricaoAtual != null && inscricaoAtual.getMotivoRejeicao() != null
+                        ? " Motivo da não admissão: " + inscricaoAtual.getMotivoRejeicao()
+                        : " Motivo da não admissão: Requisitos não preenchidos.";
+                lblStatusDescricao.setText("A sua candidatura não foi admitida para este ciclo seletivo." + motivo);
             }
             default -> lblStatusDescricao.setText("A sua candidatura foi registada com sucesso e está AGUARDANDO HOMOLOGAÇÃO da Secretaria. Submeta os seus documentos abaixo para agilizar o processo.");
         }
@@ -251,31 +272,34 @@ public class TelaDashboardCandidatoFX extends BorderPane {
     }
 
     private VBox criarItemPasso(String titulo, String subtitulo, boolean ativo, String icone) {
-        VBox box = new VBox(6);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(10));
-        box.setStyle(ativo
-                ? "-fx-background-color: rgba(37, 99, 235, 0.08); -fx-background-radius: 8px; -fx-border-color: #2563EB; -fx-border-radius: 8px;"
-                : "-fx-background-color: rgba(148, 163, 184, 0.06); -fx-background-radius: 8px; -fx-border-color: -fx-border-color-default; -fx-border-radius: 8px;");
+        VBox item = new VBox(4);
+        item.setAlignment(Pos.CENTER);
+        item.setPadding(new Insets(10, 8, 10, 8));
 
         Label lblIcone = new Label(icone);
-        lblIcone.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + (ativo ? "#2563EB" : "#94A3B8") + ";");
+        lblIcone.setStyle(
+                "-fx-font-size: 13px; -fx-font-weight: bold; "
+                + (ativo
+                        ? "-fx-text-fill: #FFFFFF; -fx-background-color: #2563EB; "
+                        : "-fx-text-fill: -fx-text-secondary; -fx-background-color: rgba(148, 163, 184, 0.2); ")
+                + "-fx-background-radius: 50%; -fx-min-width: 28px; -fx-min-height: 28px; -fx-max-width: 28px; -fx-max-height: 28px; -fx-alignment: center;"
+        );
 
         Label lblT = new Label(titulo);
-        lblT.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: -fx-text-primary;");
+        lblT.setStyle("-fx-font-weight: 700; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
 
         Label lblS = new Label(subtitulo);
-        lblS.setStyle("-fx-font-size: 11px; -fx-text-fill: -fx-text-secondary; -fx-text-alignment: center;");
+        lblS.setStyle("-fx-font-size: 10px; -fx-text-fill: -fx-text-secondary; -fx-alignment: center;");
         lblS.setWrapText(true);
 
-        box.getChildren().addAll(lblIcone, lblT, lblS);
-        return box;
+        item.getChildren().addAll(lblIcone, lblT, lblS);
+        return item;
     }
 
     private Separator criarSeparadorPasso() {
         Separator sep = new Separator();
         sep.setValignment(javafx.geometry.VPos.CENTER);
-        sep.setPrefWidth(20);
+        sep.setPrefWidth(30);
         return sep;
     }
 
@@ -283,7 +307,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         VBox card = new VBox(16);
         card.getStyleClass().add("card");
 
-        Label lblTit = new Label("Dados Pessoais Registados");
+        Label lblTit = new Label("Dados Pessoais & Habilitações Registadas");
         lblTit.getStyleClass().add("card-title");
 
         GridPane grid = new GridPane();
@@ -306,8 +330,13 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         adicionarLinhaInfo(grid, linha++, "Distrito:", candidato != null && candidato.getDistrito() != null ? candidato.getDistrito() : "-");
         adicionarLinhaInfo(grid, linha++, "Morada:", candidato != null && candidato.getMorada() != null ? candidato.getMorada() : "-");
 
+        if (inscricaoAtual != null) {
+            String nota12Formatada = inscricaoAtual.getNota12() > 0 ? String.format("%.1f / 20.0 valores", inscricaoAtual.getNota12()) : (inscricaoAtual.getNota() > 0 ? String.format("%.1f / 20.0 valores", inscricaoAtual.getNota()) : "—");
+            adicionarLinhaInfo(grid, linha++, "Nota da 12ª Classe:", nota12Formatada);
+        }
+
         if (inscricaoAtual != null && inscricaoAtual.getCursoNome() != null && !inscricaoAtual.getCursoNome().isEmpty()) {
-            adicionarLinhaInfo(grid, linha, "Curso Pretendido:", inscricaoAtual.getCursoNome());
+            adicionarLinhaInfo(grid, linha++, "Curso Pretendido:", inscricaoAtual.getCursoNome());
         }
 
         card.getChildren().addAll(lblTit, new Separator(), grid);
@@ -376,6 +405,10 @@ public class TelaDashboardCandidatoFX extends BorderPane {
             adicionarLinhaInfo(gridDocs, 2,
                     (inscricaoAtual.getTipoComprovativo12() != null ? inscricaoAtual.getTipoComprovativo12() : "Doc. 12ª Classe") + ":",
                     inscricaoAtual.getDocCertificado12OuRecibo() != null ? "✔ " + Paths.get(inscricaoAtual.getDocCertificado12OuRecibo()).getFileName() : "—");
+            adicionarLinhaInfo(gridDocs, 3, "Atestado de Pobreza:",
+                    inscricaoAtual.getDocAtestadoPobreza() != null ? "✔ " + Paths.get(inscricaoAtual.getDocAtestadoPobreza()).getFileName() : "— Não apresentado (caso tenha)");
+            adicionarLinhaInfo(gridDocs, 4, "Carta de Motivação:",
+                    inscricaoAtual.getCartaMotivacao() != null && !inscricaoAtual.getCartaMotivacao().trim().isEmpty() ? "✔ Submetida (" + inscricaoAtual.getCartaMotivacao().length() + " caracteres)" : "—");
 
             boolean validados = inscricaoAtual.isDocumentosValidados();
             Label lblEstado = new Label(validados ? "✔ Documentos verificados pela Secretaria" : "⏳ Documentos em análise pela Secretaria");
@@ -391,9 +424,11 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         } else {
             Label lblInstrucoes = new Label(
                     "Para avançar no processo seletivo, submeta os seguintes documentos digitalizados (PDF, JPG ou PNG):\n"
-                    + "  1. Bilhete de Identidade (frente e verso)\n"
-                    + "  2. Certificado de conclusão da 10ª classe\n"
-                    + "  3. Certificado da 12ª classe OU Recibo de solicitação do certificado"
+                    + "  1. Bilhete de Identidade (frente e verso) *\n"
+                    + "  2. Certificado de conclusão da 10ª classe *\n"
+                    + "  3. Certificado da 12ª classe OU Recibo de solicitação *\n"
+                    + "  4. Atestado de Pobreza (caso tenha - opcional)\n"
+                    + "  5. Carta de Motivação (obrigatória) *"
             );
             lblInstrucoes.setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-size: 13px;");
             lblInstrucoes.setWrapText(true);
@@ -425,9 +460,12 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         Label[] lblDocBI = {new Label("Nenhum ficheiro seleccionado")};
         Label[] lblDoc10 = {new Label("Nenhum ficheiro seleccionado")};
         Label[] lblDoc12 = {new Label("Nenhum ficheiro seleccionado")};
+        Label[] lblDocPobreza = {new Label("Nenhum ficheiro seleccionado (caso tenha)")};
+
         File[] fBI = {null};
         File[] f10 = {null};
         File[] f12 = {null};
+        File[] fPobreza = {null};
 
         conteudo.getChildren().addAll(
                 criarLinhaUpload("BI (frente e verso) *", lblDocBI, fBI),
@@ -449,20 +487,27 @@ public class TelaDashboardCandidatoFX extends BorderPane {
         VBox boxDoc12 = new VBox(6);
         Label lblTipoCert = new Label("Comprovativo da 12ª Classe *");
         lblTipoCert.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
-        boxDoc12.getChildren().addAll(lblTipoCert, boxTipo, criarLinhaUpload("Ficheiro", lblDoc12, f12));
+        boxDoc12.getChildren().addAll(lblTipoCert, boxTipo, criarLinhaUpload("Ficheiro 12ª *", lblDoc12, f12));
         conteudo.getChildren().add(boxDoc12);
 
+        // Campo de Atestado de Pobreza (caso tenha)
+        conteudo.getChildren().add(criarLinhaUpload("Atestado de Pobreza (caso tenha)", lblDocPobreza, fPobreza));
+
+        // Carta de Motivação OBRIGATÓRIA
         TextArea txtMotivacao = new TextArea();
-        txtMotivacao.setPromptText("Carta de motivação (opcional) — máximo 500 caracteres");
-        txtMotivacao.setMaxHeight(100);
-        txtMotivacao.setPrefRowCount(4);
+        txtMotivacao.setPromptText("Carta de motivação obrigatória — descreva a sua trajetória e motivações para o curso...");
+        txtMotivacao.setMaxHeight(120);
+        txtMotivacao.setPrefRowCount(5);
         txtMotivacao.setWrapText(true);
+        if (inscricaoAtual.getCartaMotivacao() != null) {
+            txtMotivacao.setText(inscricaoAtual.getCartaMotivacao());
+        }
         txtMotivacao.textProperty().addListener((obs, old, novo) -> {
-            if (novo.length() > 500) txtMotivacao.setText(old);
+            if (novo.length() > 1000) txtMotivacao.setText(old);
         });
 
         VBox boxMotivacao = new VBox(6);
-        Label lblMot = new Label("Carta de Motivação (opcional)");
+        Label lblMot = new Label("Carta de Motivação * (Obrigatória)");
         lblMot.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary;");
         boxMotivacao.getChildren().addAll(lblMot, txtMotivacao);
         conteudo.getChildren().add(boxMotivacao);
@@ -478,7 +523,12 @@ public class TelaDashboardCandidatoFX extends BorderPane {
             if (tipo != ButtonType.OK) return;
 
             if (fBI[0] == null || f10[0] == null || f12[0] == null) {
-                mostrarAlertaErro("Todos os documentos obrigatórios (*) devem ser seleccionados.");
+                mostrarAlertaErro("Os documentos obrigatórios (*) devem ser seleccionados: BI, Certificado 10ª e Comprovativo da 12ª.");
+                return;
+            }
+
+            if (txtMotivacao.getText() == null || txtMotivacao.getText().trim().isEmpty()) {
+                mostrarAlertaErro("A Carta de Motivação deixou de ser opcional e é estritamente obrigatória para submissão.");
                 return;
             }
 
@@ -489,10 +539,11 @@ public class TelaDashboardCandidatoFX extends BorderPane {
                 String path10 = copiarFicheiro(f10[0], prefixo + "cert10");
                 String path12 = copiarFicheiro(f12[0], prefixo + (rbCert.isSelected() ? "cert12" : "recibo12"));
                 String tipoDoc12 = rbCert.isSelected() ? "Certificado de Conclusão" : "Recibo de Solicitação";
+                String pathPobreza = fPobreza[0] != null ? copiarFicheiro(fPobreza[0], prefixo + "pobreza") : null;
 
                 controller.submeterDocumentos(
-                        inscricaoAtual.getId(), pathBI, path10, path12, tipoDoc12,
-                        txtMotivacao.getText().trim().isEmpty() ? null : txtMotivacao.getText().trim()
+                        inscricaoAtual.getId(), pathBI, path10, path12, tipoDoc12, pathPobreza,
+                        txtMotivacao.getText().trim()
                 );
 
                 carregarDadosBanco();
@@ -512,7 +563,7 @@ public class TelaDashboardCandidatoFX extends BorderPane {
 
     private HBox criarLinhaUpload(String rotulo, Label[] lblNome, File[] ficheiro) {
         Label lbl = new Label(rotulo);
-        lbl.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary; -fx-min-width: 180px;");
+        lbl.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: -fx-text-primary; -fx-min-width: 200px;");
 
         lblNome[0].setStyle("-fx-text-fill: -fx-text-secondary; -fx-font-size: 12px;");
 

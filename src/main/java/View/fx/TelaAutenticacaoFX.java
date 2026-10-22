@@ -275,7 +275,8 @@ public class TelaAutenticacaoFX extends BorderPane {
 
             if (resultado.getPerfil() == service.AutenticacaoService.TipoPerfil.ADMINISTRADOR) {
                 mostrarAviso("Acesso administrativo confirmado! A redirecionar...", true);
-                Navegador.irParaDashboardSecretaria();
+                model.Administrador admin = (model.Administrador) resultado.getUsuario();
+                Navegador.irParaDashboardSecretaria(admin);
             } else if (resultado.getPerfil() == service.AutenticacaoService.TipoPerfil.CANDIDATO) {
                 Candidato c = (Candidato) resultado.getUsuario();
                 Navegador.irParaDashboardCandidato(c);
@@ -309,9 +310,16 @@ public class TelaAutenticacaoFX extends BorderPane {
         adicionarCampoGrid(grid, "Nome Completo *", txtNome, 0, 0, 2);
 
         TextField txtBI = new TextField();
-        txtBI.setPromptText("Ex: 110100234567A ou 11.01.00234567-A");
-        InscricaoController.aplicarFiltroBI(txtBI, 16);
-        adicionarCampoGrid(grid, "Número do BI (13 caracteres: XX.XX.XXXXXXXX-X) *", txtBI, 0, 1, 1);
+        txtBI.setPromptText("Ex: 11.01.00234567-A");
+        Label lblBIFeedback = new Label();
+        lblBIFeedback.setVisible(false);
+        lblBIFeedback.setManaged(false);
+        InscricaoController.aplicarMascaraEValidacaoBI(txtBI, lblBIFeedback);
+        VBox boxBICompleto = new VBox(2);
+        Label lblBITitulo = new Label("Número do BI (Formato: XX.XX.XXXXXXXX-X) *");
+        lblBITitulo.setStyle("-fx-font-size: 12.5px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary;");
+        boxBICompleto.getChildren().addAll(lblBITitulo, txtBI, lblBIFeedback);
+        grid.add(boxBICompleto, 0, 1);
 
         DatePicker dpNasc = new DatePicker(LocalDate.of(2004, 1, 1));
         dpNasc.setMaxWidth(Double.MAX_VALUE);

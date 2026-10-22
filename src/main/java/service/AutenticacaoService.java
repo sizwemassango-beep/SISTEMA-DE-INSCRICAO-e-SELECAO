@@ -86,7 +86,7 @@ public class AutenticacaoService {
             if (admins.isEmpty()) {
                 // Primeiro acesso do sistema para configuração inicial
                 if ("admin@sis.ac.mz".equalsIgnoreCase(emailLimpo) && "admin123".equals(senhaLimpa)) {
-                    Administrador root = new Administrador("Administrador Geral", "admin@sis.ac.mz", "admin123", "Secretaria Geral");
+                    Administrador root = new Administrador("Administrador Geral", "admin@sis.ac.mz", "admin123", "Administrador Geral");
                     administradorDao.salvar(root);
                     return new ResultadoLogin(TipoPerfil.ADMINISTRADOR, root);
                 }

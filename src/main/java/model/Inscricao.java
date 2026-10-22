@@ -32,6 +32,7 @@ public class Inscricao {
     protected String docAtestadoPobreza;
     protected String cartaMotivacao;
     protected String motivoRejeicao;
+    protected String tipoAdmissao; // "MERITO", "CARENCIA"
 
     public Long getId() {
         return id;
@@ -179,6 +180,14 @@ public class Inscricao {
 
     public void setMotivoRejeicao(String motivoRejeicao) {
         this.motivoRejeicao = motivoRejeicao;
+    }
+
+    public String getTipoAdmissao() {
+        return tipoAdmissao;
+    }
+
+    public void setTipoAdmissao(String tipoAdmissao) {
+        this.tipoAdmissao = tipoAdmissao;
     }
 
     public void aprovar() {

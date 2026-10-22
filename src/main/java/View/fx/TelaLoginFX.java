@@ -1,6 +1,7 @@
 package View.fx;
 
 import controller.LoginController;
+import service.AutenticacaoService.ResultadoLogin;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -196,10 +197,12 @@ public class TelaLoginFX extends BorderPane {
         }
 
         if (perfilSecretaria) {
-            boolean sucesso = loginController.autenticarSecretaria(email, senha);
+            ResultadoLogin resultado = loginController.autenticar(email, senha);
+            boolean sucesso = resultado.isSucesso() && resultado.getPerfil() == service.AutenticacaoService.TipoPerfil.ADMINISTRADOR;
             if (sucesso) {
                 mostrarMensagem("Login efetuado com sucesso! Redirecionando...", true);
-                Navegador.irParaDashboardSecretaria();
+                model.Administrador admin = (model.Administrador) resultado.getUsuario();
+                Navegador.irParaDashboardSecretaria(admin);
             } else {
                 mostrarMensagem("Credenciais de secretaria inválidas. Verifique o email e senha.", false);
             }

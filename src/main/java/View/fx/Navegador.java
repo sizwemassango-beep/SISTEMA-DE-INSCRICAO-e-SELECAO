@@ -15,6 +15,7 @@ public class Navegador {
     private static Stage palcoPrincipal;
     private static Scene cenaPrincipal;
     private static boolean modoEscuro = false;
+    private static model.Administrador administradorLogado;
 
     public static void inicializar(Stage stage) {
         palcoPrincipal = stage;
@@ -96,6 +97,7 @@ public class Navegador {
     }
 
     public static void irParaTelaInicial() {
+        administradorLogado = null;
         navegarPara(new TelaAutenticacaoFX());
     }
 
@@ -108,11 +110,20 @@ public class Navegador {
     }
 
     public static void irParaDashboardSecretaria() {
-        navegarPara(new TelaDashboardSecretariaFX());
+        navegarPara(new TelaDashboardSecretariaFX(administradorLogado));
+    }
+
+    public static void irParaDashboardSecretaria(model.Administrador admin) {
+        administradorLogado = admin;
+        navegarPara(new TelaDashboardSecretariaFX(admin));
     }
 
     public static void irParaDashboardCandidato(model.Candidato candidato) {
         navegarPara(new TelaDashboardCandidatoFX(candidato));
+    }
+
+    public static model.Administrador getAdministradorLogado() {
+        return administradorLogado;
     }
 
     public static Stage getPalcoPrincipal() {

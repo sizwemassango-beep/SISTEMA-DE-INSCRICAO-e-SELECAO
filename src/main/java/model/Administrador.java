@@ -46,6 +46,16 @@ public class Administrador extends Utilizador{
         this.cargo = cargo;
     }
 
+    public boolean isAdministrador() {
+        if (cargo == null || cargo.trim().isEmpty()) return true;
+        String c = cargo.trim().toLowerCase();
+        return c.contains("admin") || c.contains("diretor") || c.contains("gerente") || c.equals("administrador");
+    }
+
+    public boolean isSecretaria() {
+        return !isAdministrador();
+    }
+
     /**
      * Metodo para obter todos os dados do administrador
      * @return

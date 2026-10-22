@@ -44,12 +44,19 @@ public class TelaDashboardSecretariaFX extends BorderPane {
     private Button btnMenuPainel;
     private Button btnMenuCandidatos;
     private Button btnMenuCursos;
+    private final model.Administrador usuarioLogado;
     private Button btnMenuListaEspera;
     private Button btnMenuAdmitidos;
+    private Button btnMenuNaoAdmitidos;
     private Button btnMenuUsuarios;
     private Button btnMenuPdf;
 
     public TelaDashboardSecretariaFX() {
+        this(Navegador.getAdministradorLogado());
+    }
+
+    public TelaDashboardSecretariaFX(model.Administrador usuarioLogado) {
+        this.usuarioLogado = usuarioLogado;
         this.controller = new PainelController();
         this.inscricaoController = new InscricaoController();
         this.loginController = new controller.LoginController();
@@ -103,9 +110,20 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         Label lblMarca = new Label("sis.ocean");
         lblMarca.setStyle("-fx-font-size: 19px; -fx-font-weight: 800; -fx-text-fill: #FFFFFF;");
 
-        Label lblPerfil = new Label("PAINEL ACADÉMICO");
+        String perfilTexto = "PAINEL ACADÉMICO";
+        if (usuarioLogado != null) {
+            String cargoNome = usuarioLogado.getCargo() != null ? usuarioLogado.getCargo() : (usuarioLogado.isAdministrador() ? "Administrador" : "Secretaria");
+            perfilTexto = usuarioLogado.isAdministrador() ? "🛡 " + cargoNome.toUpperCase() : "📋 " + cargoNome.toUpperCase();
+        }
+        Label lblPerfil = new Label(perfilTexto);
         lblPerfil.setStyle("-fx-font-size: 9.5px; -fx-font-weight: 700; -fx-text-fill: #2DD4BF; -fx-letter-spacing: 0.5px;");
         titulosSidebar.getChildren().addAll(lblMarca, lblPerfil);
+
+        if (usuarioLogado != null && usuarioLogado.getNomeCompleto() != null) {
+            Label lblUsuarioNome = new Label(usuarioLogado.getNomeCompleto());
+            lblUsuarioNome.setStyle("-fx-font-size: 10px; -fx-text-fill: #CBD5E1; -fx-font-weight: 600;");
+            titulosSidebar.getChildren().add(lblUsuarioNome);
+        }
 
         boxMarca.getChildren().addAll(logoSidebar, titulosSidebar);
 
@@ -121,11 +139,15 @@ public class TelaDashboardSecretariaFX extends BorderPane {
 
         btnMenuListaEspera = criarBotaoMenu("⏳ Lista de Espera", false, this::mostrarListaEspera);
         btnMenuAdmitidos = criarBotaoMenu("🎓 Admitidos por Carência", false, this::mostrarAdmitidosCarencia);
+        btnMenuNaoAdmitidos = criarBotaoMenu("❌ Não Admitidos", false, this::mostrarNaoAdmitidos);
 
         Label lblSecAdmin = new Label("ADMINISTRAÇÃO");
         lblSecAdmin.getStyleClass().add("sidebar-section-header");
 
-        btnMenuUsuarios = criarBotaoMenu("🛡 Utilizadores", false, this::mostrarGestaoSecretaria);
+        boolean podeGerirUsuarios = usuarioLogado == null || usuarioLogado.isAdministrador();
+        if (podeGerirUsuarios) {
+            btnMenuUsuarios = criarBotaoMenu("🛡 Utilizadores", false, this::mostrarGestaoSecretaria);
+        }
         btnMenuPdf = criarBotaoMenu("📄 Relatórios PDF", false, this::mostrarModuloPdf);
 
         Region espacador = new Region();
@@ -156,8 +178,15 @@ public class TelaDashboardSecretariaFX extends BorderPane {
                 lblSecSelecao,
                 btnMenuListaEspera,
                 btnMenuAdmitidos,
-                lblSecAdmin,
-                btnMenuUsuarios,
+                btnMenuNaoAdmitidos,
+                lblSecAdmin
+        );
+
+        if (podeGerirUsuarios && btnMenuUsuarios != null) {
+            sidebar.getChildren().add(btnMenuUsuarios);
+        }
+
+        sidebar.getChildren().addAll(
                 btnMenuPdf,
                 espacador,
                 lblSecConfig,
@@ -748,43 +777,104 @@ public class TelaDashboardSecretariaFX extends BorderPane {
 
         gridColunas.getChildren().addAll(col1, col2, col3);
 
+        // Obtenção das cotas do curso e notas para apoio à decisão da secretaria
+        Curso cursoInsc = inscricao != null ? inscricao.getCurso() : null;
+        if (cursoInsc == null && inscricao != null && inscricao.getCursoId() != null) {
+            cursoInsc = controller.listarCursos().stream()
+                    .filter(c -> c.getId().equals(inscricao.getCursoId()))
+                    .findFirst().orElse(null);
+        }
+
+        int totalVagas = cursoInsc != null ? cursoInsc.getNumeroVagas() : 0;
+        int vagasMerito = cursoInsc != null ? cursoInsc.getVagasMerito() : 0;
+        int vagasCarencia = cursoInsc != null ? cursoInsc.getVagasNecessidade() : 0;
+        int ocupadasMerito = (cursoInsc != null && cursoInsc.getId() != null)
+                ? inscricaoController.contarAprovadosPorCursoETipo(cursoInsc.getId(), "MERITO") : 0;
+        int ocupadasCarencia = (cursoInsc != null && cursoInsc.getId() != null)
+                ? inscricaoController.contarAprovadosPorCursoETipo(cursoInsc.getId(), "CARENCIA") : 0;
+        double nota12MinCurso = (cursoInsc != null && cursoInsc.getId() != null)
+                ? inscricaoController.buscarNota12MaisBaixaPorCurso(cursoInsc.getId()) : 0.0;
+        double nota12Candidato = inscricao != null ? inscricao.getNota12() : 0.0;
+
+        HBox boxQuotas = new HBox(16);
+        boxQuotas.setStyle("-fx-background-color: rgba(59, 130, 246, 0.08); -fx-padding: 10px 14px; -fx-background-radius: 8px; -fx-border-color: #93C5FD; -fx-border-radius: 8px;");
+        boxQuotas.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblQMerito = new Label(String.format("🏆 Vagas Mérito: %d / %d preenchidas", ocupadasMerito, vagasMerito));
+        lblQMerito.setStyle("-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: " + (ocupadasMerito >= vagasMerito ? "#EF4444" : "#1D4ED8") + ";");
+
+        Label lblQCarencia = new Label(String.format("🤝 Vagas Carência: %d / %d preenchidas", ocupadasCarencia, vagasCarencia));
+        lblQCarencia.setStyle("-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: " + (ocupadasCarencia >= vagasCarencia ? "#EF4444" : "#15803D") + ";");
+
+        Label lblNotaMin = new Label(String.format("📊 Nota 12ª mais baixa no curso: %.1f val (Candidato: %.1f val)", nota12MinCurso, nota12Candidato));
+        lblNotaMin.setStyle("-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: #334155;");
+
+        boxQuotas.getChildren().addAll(lblQMerito, new Separator(javafx.geometry.Orientation.VERTICAL), lblQCarencia, new Separator(javafx.geometry.Orientation.VERTICAL), lblNotaMin);
+
         // BOX DE BOTÕES DE APROVAÇÃO E RECUSA DENTRO DA CAIXA DE INFORMAÇÕES
-        HBox boxBotoes = new HBox(12);
+        HBox boxBotoes = new HBox(10);
         boxBotoes.setAlignment(Pos.CENTER_LEFT);
         boxBotoes.setPadding(new Insets(10, 0, 0, 0));
 
-        Button btnAprovar = new Button("✔ Aprovar Candidato");
-        btnAprovar.setStyle("-fx-background-color: #10B981; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 16px; -fx-cursor: hand;");
+        Button btnAprovarMerito = new Button(String.format("🏆 Aprovar por Mérito (%d/%d)", ocupadasMerito, vagasMerito));
+        btnAprovarMerito.setStyle("-fx-background-color: #2563EB; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 14px; -fx-cursor: hand;");
 
-        Button btnListaEspera = new Button("📋 Colocar na Lista de Espera");
-        btnListaEspera.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 16px; -fx-cursor: hand;");
+        Button btnAprovarCarencia = new Button(String.format("🤝 Aprovar por Carência (%d/%d)", ocupadasCarencia, vagasCarencia));
+        btnAprovarCarencia.setStyle("-fx-background-color: #059669; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 14px; -fx-cursor: hand;");
 
-        Button btnRejeitar = new Button("✖ Recusar Candidato");
-        btnRejeitar.setStyle("-fx-background-color: #EF4444; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 16px; -fx-cursor: hand;");
+        Button btnListaEspera = new Button("📋 Lista de Espera");
+        btnListaEspera.setStyle("-fx-background-color: #475569; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 14px; -fx-cursor: hand;");
+
+        Button btnRejeitar = new Button("✖ Recusar com Motivo");
+        btnRejeitar.setStyle("-fx-background-color: #EF4444; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 14px; -fx-cursor: hand;");
 
         Button btnVerDocs = new Button("📁 Ver Documentos & Carta");
         btnVerDocs.getStyleClass().add("button-secondary");
 
         Button btnValidarDocs = new Button("✔ Validar Documentos");
-        btnValidarDocs.setStyle("-fx-background-color: #059669; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 16px; -fx-cursor: hand;");
+        btnValidarDocs.setStyle("-fx-background-color: #0D9488; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 9px 14px; -fx-cursor: hand;");
 
-        btnAprovar.setOnAction(e -> {
+        final int fVagasMerito = vagasMerito;
+        final int fOcupadasMerito = ocupadasMerito;
+        final int fVagasCarencia = vagasCarencia;
+        final int fOcupadasCarencia = ocupadasCarencia;
+
+        btnAprovarMerito.setOnAction(e -> {
             if (inscricao == null) {
                 mostrarAviso("Inscrição não encontrada para este candidato.");
+                return;
+            }
+            if (fOcupadasMerito >= fVagasMerito && fVagasMerito > 0) {
+                mostrarAviso(String.format("🚫 Limite de vagas por Mérito atingido!\nO curso dispõe de %d vaga(s) por Mérito e todas as %d já foram preenchidas.\nNão é possível aprovar mais por esta modalidade.", fVagasMerito, fOcupadasMerito));
+                return;
+            }
+            inscricaoController.aprovarCandidato(inscricao.getId(), "MERITO");
+            mostrarSucesso("Candidato " + candidato.getNomeCompleto() + " APROVADO POR MÉRITO!");
+            carregarDados();
+            mostrarGestaoCandidatos();
+        });
+
+        btnAprovarCarencia.setOnAction(e -> {
+            if (inscricao == null) {
+                mostrarAviso("Inscrição não encontrada para este candidato.");
+                return;
+            }
+            if (fOcupadasCarencia >= fVagasCarencia && fVagasCarencia > 0) {
+                mostrarAviso(String.format("🚫 Limite de vagas por Carência atingido!\nO curso dispõe de %d vaga(s) por Carência e todas as %d já foram preenchidas.\nNão é possível aprovar mais por esta modalidade.", fVagasCarencia, fOcupadasCarencia));
                 return;
             }
             if (!cumpreCarencia) {
                 Alert alertaCarencia = new Alert(Alert.AlertType.CONFIRMATION);
                 alertaCarencia.setTitle("Aviso de Requisito de Carência");
                 alertaCarencia.setHeaderText("Atenção: Candidato com Carência Inferior ao Requisito!");
-                alertaCarencia.setContentText("A pontuação de carência deste candidato (" + pontosCarencia + " pts) é menor do que o requisito definido para o curso (" + requisitoCurso + " pts).\n\nDeseja aprovar a admissão mesmo assim?");
+                alertaCarencia.setContentText("A pontuação de carência deste candidato (" + pontosCarencia + " pts) é menor do que o requisito definido para o curso (" + requisitoCurso + " pts).\n\nDeseja aprovar por carência excepcionalmente?");
                 Optional<ButtonType> res = alertaCarencia.showAndWait();
                 if (res.isEmpty() || res.get() != ButtonType.OK) {
                     return;
                 }
             }
-            inscricaoController.aprovarCandidato(inscricao.getId());
-            mostrarSucesso("Candidato " + candidato.getNomeCompleto() + " APROVADO com sucesso!");
+            inscricaoController.aprovarCandidato(inscricao.getId(), "CARENCIA");
+            mostrarSucesso("Candidato " + candidato.getNomeCompleto() + " APROVADO POR CARÊNCIA!");
             carregarDados();
             mostrarGestaoCandidatos();
         });
@@ -842,13 +932,13 @@ public class TelaDashboardSecretariaFX extends BorderPane {
             mostrarGestaoCandidatos();
         });
 
-        boxBotoes.getChildren().addAll(btnAprovar, btnListaEspera, btnRejeitar, btnVerDocs, btnValidarDocs);
+        boxBotoes.getChildren().addAll(btnAprovarMerito, btnAprovarCarencia, btnListaEspera, btnRejeitar, btnVerDocs, btnValidarDocs);
 
         container.getChildren().addAll(headerCaixa);
         if (st == StatusInscricao.NAO_APROVADO) {
             container.getChildren().add(boxMotivoNaoAdmissao);
         }
-        container.getChildren().addAll(new Separator(), gridColunas, new Separator(), boxBotoes);
+        container.getChildren().addAll(new Separator(), gridColunas, boxQuotas, new Separator(), boxBotoes);
     }
 
     private void adicionarLinhaGrid(GridPane grid, int linha, String rotulo, String valor) {
@@ -985,7 +1075,13 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         TableColumn<Curso, String> colMinCarencia = new TableColumn<>("Min. Pontos Carência");
         colMinCarencia.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPontosMinimosCarencia() + " pts"));
 
-        tabelaCursos.getColumns().addAll(colId, colNome, colVagas, colMerito, colNec, colMinCarencia);
+        TableColumn<Curso, String> colNota12Min = new TableColumn<>("Nota 12ª Mínima");
+        colNota12Min.setCellValueFactory(c -> {
+            double min = inscricaoController.buscarNota12MaisBaixaPorCurso(c.getValue().getId());
+            return new SimpleStringProperty(min > 0 ? String.format(Locale.US, "%.1f val", min) : "—");
+        });
+
+        tabelaCursos.getColumns().addAll(colId, colNome, colVagas, colMerito, colNec, colMinCarencia, colNota12Min);
         tabelaCursos.setItems(FXCollections.observableArrayList(controller.listarCursos()));
         HBox.setHgrow(tabelaCursos, Priority.ALWAYS);
 
@@ -1126,6 +1222,7 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         public double getDistancia() { return carencia != null ? carencia.getDistanciaKm() : 0.0; }
         public String getProvincia() { return candidato != null && candidato.getProvincia() != null ? candidato.getProvincia() : "-"; }
         public boolean isTemAtestadoPobreza() { return inscricao != null && inscricao.getDocAtestadoPobreza() != null && !inscricao.getDocAtestadoPobreza().isEmpty(); }
+        public String getTipoAdmissao() { return inscricao != null && inscricao.getTipoAdmissao() != null ? inscricao.getTipoAdmissao() : ""; }
         public LocalDate getDataInscricao() { return inscricao != null ? inscricao.getDataInscricao() : LocalDate.now(); }
     }
 
@@ -1448,10 +1545,18 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         TableColumn<ItemCandidaturaView, String> colAtestado = new TableColumn<>("Atestado Pobreza");
         colAtestado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().isTemAtestadoPobreza() ? "✔ Sim" : "— Não"));
 
+        TableColumn<ItemCandidaturaView, String> colTipoAdmissao = new TableColumn<>("Modalidade");
+        colTipoAdmissao.setCellValueFactory(c -> {
+            String tipo = c.getValue().getTipoAdmissao();
+            if ("MERITO".equalsIgnoreCase(tipo)) return new SimpleStringProperty("🏆 Mérito");
+            if ("CARENCIA".equalsIgnoreCase(tipo)) return new SimpleStringProperty("🤝 Carência");
+            return new SimpleStringProperty("Aprovado");
+        });
+
         TableColumn<ItemCandidaturaView, String> colProv = new TableColumn<>("Província");
         colProv.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProvincia()));
 
-        tabelaAdmitidos.getColumns().addAll(colNome, colBi, colCurso, colPontos, colMedia, colDist, colAtestado, colProv);
+        tabelaAdmitidos.getColumns().addAll(colNome, colBi, colCurso, colTipoAdmissao, colPontos, colMedia, colDist, colAtestado, colProv);
 
         // Função de filtro dinâmico
         Runnable aplicarFiltros = () -> {
@@ -1519,6 +1624,123 @@ public class TelaDashboardSecretariaFX extends BorderPane {
         scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
 
         areaConteudo.getChildren().setAll(scroll);
+    }
+
+    // =========================================================================
+    // 6. NÃO ADMITIDOS (COM MOTIVO DA NÃO ADMISSÃO & REABERTURA)
+    // =========================================================================
+    private void mostrarNaoAdmitidos() {
+        VBox box = new VBox(18);
+        box.setFillWidth(true);
+
+        Label lblTitulo = new Label("❌ Candidatos Não Admitidos / Recusados");
+        lblTitulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary;");
+
+        Label lblSub = new Label("Lista de candidaturas com admissão recusada, acompanhadas do respectivo motivo registrado obrigatoriamente.");
+        lblSub.setStyle("-fx-font-size: 13px; -fx-text-fill: -fx-text-secondary;");
+
+        List<ItemCandidaturaView> itensNaoAdmitidos = carregarItensPorStatus(StatusInscricao.NAO_APROVADO);
+
+        HBox barFiltros = new HBox(12);
+        barFiltros.setAlignment(Pos.CENTER_LEFT);
+
+        ComboBox<String> cbFiltroCurso = new ComboBox<>();
+        cbFiltroCurso.getItems().add("Todos os Cursos");
+        controller.listarCursos().forEach(c -> cbFiltroCurso.getItems().add(c.getNome()));
+        cbFiltroCurso.setValue("Todos os Cursos");
+
+        TextField txtPesquisa = new TextField();
+        txtPesquisa.setPromptText("Buscar por nome, BI...");
+        txtPesquisa.setPrefWidth(240);
+
+        Label lblTotal = new Label("Total: " + itensNaoAdmitidos.size() + " recusas");
+        lblTotal.setStyle("-fx-font-weight: bold; -fx-text-fill: #EF4444; -fx-background-color: #FEE2E2; -fx-padding: 6px 12px; -fx-background-radius: 6px;");
+
+        Region espFiltros = new Region();
+        HBox.setHgrow(espFiltros, Priority.ALWAYS);
+
+        Button btnReabrir = new Button("🔄 Reabrir Candidatura (Pendente)");
+        btnReabrir.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 8px 14px; -fx-cursor: hand;");
+
+        Button btnVerDocs = new Button("📁 Ver Detalhes / Docs");
+        btnVerDocs.getStyleClass().add("button-secondary");
+
+        barFiltros.getChildren().addAll(new Label("Filtrar Curso:"), cbFiltroCurso, txtPesquisa, espFiltros, lblTotal, btnReabrir, btnVerDocs);
+
+        TableView<ItemCandidaturaView> tabela = new TableView<>();
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        tabela.setPlaceholder(new Label("Nenhum candidato na lista de não admitidos."));
+
+        TableColumn<ItemCandidaturaView, String> colNome = new TableColumn<>("Candidato");
+        colNome.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
+
+        TableColumn<ItemCandidaturaView, String> colBi = new TableColumn<>("BI");
+        colBi.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getBi()));
+
+        TableColumn<ItemCandidaturaView, String> colCurso = new TableColumn<>("Curso");
+        colCurso.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCursoNome()));
+
+        TableColumn<ItemCandidaturaView, String> colNota12 = new TableColumn<>("Nota 12ª");
+        colNota12.setCellValueFactory(c -> new SimpleStringProperty(String.format(Locale.US, "%.1f val", c.getValue().getMedia12())));
+
+        TableColumn<ItemCandidaturaView, String> colPontos = new TableColumn<>("Pontos Carência");
+        colPontos.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPontosCarencia() + " pts"));
+
+        TableColumn<ItemCandidaturaView, String> colMotivo = new TableColumn<>("Motivo da Não Admissão");
+        colMotivo.setCellValueFactory(c -> {
+            String mot = c.getValue().inscricao != null ? c.getValue().inscricao.getMotivoRejeicao() : null;
+            return new SimpleStringProperty(mot != null && !mot.trim().isEmpty() ? mot : "Não especificado");
+        });
+
+        TableColumn<ItemCandidaturaView, String> colData = new TableColumn<>("Data Inscrição");
+        colData.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDataInscricao().toString()));
+
+        tabela.getColumns().addAll(colNome, colBi, colCurso, colNota12, colPontos, colMotivo, colData);
+
+        Runnable aplicarFiltros = () -> {
+            String txt = txtPesquisa.getText() != null ? txtPesquisa.getText().toLowerCase().trim() : "";
+            String cursoSel = cbFiltroCurso.getValue();
+
+            List<ItemCandidaturaView> filtrados = itensNaoAdmitidos.stream().filter(item -> {
+                boolean bateTexto = txt.isEmpty()
+                        || item.getNome().toLowerCase().contains(txt)
+                        || item.getBi().toLowerCase().contains(txt);
+                boolean bateCurso = cursoSel == null || cursoSel.equals("Todos os Cursos")
+                        || item.getCursoNome().equalsIgnoreCase(cursoSel);
+                return bateTexto && bateCurso;
+            }).collect(Collectors.toList());
+
+            tabela.setItems(FXCollections.observableArrayList(filtrados));
+            lblTotal.setText("Total: " + filtrados.size() + " recusas");
+        };
+
+        cbFiltroCurso.valueProperty().addListener(e -> aplicarFiltros.run());
+        txtPesquisa.textProperty().addListener(e -> aplicarFiltros.run());
+        aplicarFiltros.run();
+
+        btnReabrir.setOnAction(e -> {
+            ItemCandidaturaView sel = tabela.getSelectionModel().getSelectedItem();
+            if (sel == null || sel.inscricao == null) {
+                mostrarAviso("Seleccione um candidato para reabrir a candidatura.");
+                return;
+            }
+            inscricaoController.reabrirCandidatura(sel.inscricao.getId());
+            mostrarSucesso("Candidatura de " + sel.getNome() + " reaberta e movida para PENDENTE!");
+            carregarDados();
+            mostrarNaoAdmitidos();
+        });
+
+        btnVerDocs.setOnAction(e -> {
+            ItemCandidaturaView sel = tabela.getSelectionModel().getSelectedItem();
+            if (sel != null && sel.inscricao != null) {
+                mostrarDialogDocumentos(sel.inscricao);
+            } else {
+                mostrarAviso("Seleccione um candidato para ver os detalhes.");
+            }
+        });
+
+        box.getChildren().addAll(lblTitulo, lblSub, barFiltros, tabela);
+        areaConteudo.getChildren().setAll(box);
     }
 
     private void mostrarModuloPdf() {
@@ -1635,6 +1857,22 @@ public class TelaDashboardSecretariaFX extends BorderPane {
     }
 
     private void mostrarGestaoSecretaria() {
+        if (usuarioLogado != null && usuarioLogado.isSecretaria()) {
+            VBox boxRestrito = new VBox(16);
+            boxRestrito.setAlignment(Pos.CENTER);
+            boxRestrito.setPadding(new Insets(40));
+
+            Label lblRestrito = new Label("🔒 Acesso Restrito à Administração");
+            lblRestrito.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #EF4444;");
+
+            Label lblDesc = new Label("Membros da secretaria não possuem permissão para criar ou gerir contas de utilizadores.\nEsta funcionalidade é exclusiva do Administrador Geral.");
+            lblDesc.setStyle("-fx-font-size: 13px; -fx-text-fill: -fx-text-secondary; -fx-text-alignment: center;");
+
+            boxRestrito.getChildren().addAll(lblRestrito, lblDesc);
+            areaConteudo.getChildren().setAll(boxRestrito);
+            return;
+        }
+
         VBox box = new VBox(20);
         box.setFillWidth(true);
 

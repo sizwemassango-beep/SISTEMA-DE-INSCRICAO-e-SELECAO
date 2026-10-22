@@ -223,18 +223,16 @@ public class TelaNovaInscricaoFX extends BorderPane {
         });
 
         txtBI = new TextField();
-        txtBI.setPromptText("Ex: 110100234567A ou 11.01.00234567-A");
-        InscricaoController.aplicarFiltroBI(txtBI, 16);
-        adicionarCampoGrid(gridDados, "Número do BI (13 caracteres: XX.XX.XXXXXXXX-X) *", txtBI, 0, 1, 1);
-        txtBI.focusedProperty().addListener((obs, old, focused) -> {
-            if (!focused) {
-                boolean ok = InscricaoController.isBiValido(txtBI.getText());
-                InscricaoController.marcarValidadeCampo(txtBI, ok);
-                if (!ok && txtBI.getText() != null && !txtBI.getText().trim().isEmpty()) {
-                    ComponentesVisuais.mostrarPopupToast(txtBI, "BI moçambicano inválido: deve ter 13 caracteres (2 província, 2 distrito, 8 sequência e 1 letra maiúscula, ex: 110100234567A).", ComponentesVisuais.TipoMensagem.AVISO);
-                }
-            }
-        });
+        txtBI.setPromptText("Ex: 11.01.00234567-A");
+        Label lblBIFeedback = new Label();
+        lblBIFeedback.setVisible(false);
+        lblBIFeedback.setManaged(false);
+        InscricaoController.aplicarMascaraEValidacaoBI(txtBI, lblBIFeedback);
+        VBox boxBICompleto = new VBox(2);
+        Label lblBITitulo = new Label("Número do BI (Formato: XX.XX.XXXXXXXX-X) *");
+        lblBITitulo.setStyle("-fx-font-size: 12.5px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary;");
+        boxBICompleto.getChildren().addAll(lblBITitulo, txtBI, lblBIFeedback);
+        gridDados.add(boxBICompleto, 0, 1);
 
         dpNascimento = new DatePicker();
         dpNascimento.setPromptText("Selecione a data");

@@ -3,7 +3,9 @@ package controller;
 import com.lowagie.text.DocumentException;
 import dao.ConexaoBD;
 import dao.CursoDao;
+import javafx.application.Platform;
 import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import model.Candidato;
@@ -98,6 +100,44 @@ public class InscricaoController extends ControllerBase {
 
     public void aprovarCandidato(Long inscricaoId) {
         inscricaoService.getInscricaoDao().atualizarStatus(inscricaoId, StatusInscricao.APROVADO);
+    }
+
+    public void aprovarCandidato(Long inscricaoId, String tipoAdmissao) {
+        inscricaoService.getInscricaoDao().atualizarStatusETipo(inscricaoId, StatusInscricao.APROVADO, tipoAdmissao);
+    }
+
+    public void reabrirCandidatura(Long inscricaoId) {
+        inscricaoService.getInscricaoDao().atualizarStatusComMotivo(inscricaoId, StatusInscricao.PENDENTE, null);
+    }
+
+    public int contarAprovadosPorCursoETipo(Long cursoId, String tipoAdmissao) {
+        return inscricaoService.getInscricaoDao().contarAprovadosPorCursoETipo(cursoId, tipoAdmissao);
+    }
+
+    public double buscarNota12MaisBaixaPorCurso(Long cursoId) {
+        return inscricaoService.getInscricaoDao().buscarNota12MaisBaixaPorCurso(cursoId);
+    }
+
+    public double buscarNota12MaisAltaPorCurso(Long cursoId) {
+        return inscricaoService.getInscricaoDao().buscarNota12MaisAltaPorCurso(cursoId);
+    }
+
+    public double buscarMediaNota12PorCurso(Long cursoId) {
+        return inscricaoService.getInscricaoDao().buscarMediaNota12PorCurso(cursoId);
+    }
+
+    public boolean podeAprovarPorMerito(Curso curso) {
+        if (curso == null) return false;
+        int vagasMerito = curso.getVagasMerito();
+        int ocupadas = contarAprovadosPorCursoETipo(curso.getId(), "MERITO");
+        return ocupadas < vagasMerito;
+    }
+
+    public boolean podeAprovarPorCarencia(Curso curso) {
+        if (curso == null) return false;
+        int vagasCarencia = curso.getVagasNecessidade();
+        int ocupadas = contarAprovadosPorCursoETipo(curso.getId(), "CARENCIA");
+        return ocupadas < vagasCarencia;
     }
 
     public void rejeitarCandidato(Long inscricaoId, String motivo) {
@@ -249,6 +289,106 @@ public class InscricaoController extends ControllerBase {
             campo.setStyle("-fx-border-color: -fx-border-color-default;");
         } else {
             campo.setStyle("-fx-border-color: #EF4444; -fx-effect: dropshadow(three-pass-box, rgba(239, 68, 68, 0.25), 4, 0, 0, 0);");
+        }
+    }
+
+    public static void aplicarMascaraEValidacaoBI(TextField textField, Label lblFeedback) {
+        final boolean[] isUpdating = {false};
+
+        textField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (isUpdating[0]) return;
+            if (newVal == null) return;
+
+            // Se o utilizador apagou e ficou um delimitador '.', '-' no final, remove-o suavemente
+            if (oldVal != null && newVal.length() < oldVal.length()) {
+                if (newVal.endsWith(".") || newVal.endsWith("-")) {
+                    isUpdating[0] = true;
+                    String trimmed = newVal.substring(0, newVal.length() - 1);
+                    textField.setText(trimmed);
+                    textField.positionCaret(trimmed.length());
+                    isUpdating[0] = false;
+                    atualizarVisualBI(textField, trimmed, lblFeedback);
+                    return;
+                }
+            }
+
+            // Extrai caracteres permitidos (12 dígitos + 1 letra maiúscula)
+            String raw = newVal.replaceAll("[^0-9a-zA-Z]", "").toUpperCase();
+            if (raw.length() > 13) {
+                raw = raw.substring(0, 13);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < raw.length(); i++) {
+                char c = raw.charAt(i);
+                if (i < 12) {
+                    if (Character.isDigit(c)) {
+                        sb.append(c);
+                        if (sb.length() == 2 || sb.length() == 5) {
+                            sb.append('.');
+                        }
+                    }
+                } else if (i == 12) {
+                    if (Character.isLetter(c)) {
+                        if (sb.length() == 14) {
+                            sb.append('-');
+                        }
+                        sb.append(Character.toUpperCase(c));
+                    }
+                }
+            }
+
+            String formatted = sb.toString();
+            if (!formatted.equals(newVal)) {
+                isUpdating[0] = true;
+                textField.setText(formatted);
+                textField.positionCaret(formatted.length());
+                isUpdating[0] = false;
+            }
+
+            atualizarVisualBI(textField, formatted, lblFeedback);
+        });
+    }
+
+    private static void atualizarVisualBI(TextField textField, String formatted, Label lblFeedback) {
+        if (formatted == null || formatted.trim().isEmpty()) {
+            textField.setStyle("-fx-border-color: -fx-border-color-default;");
+            if (lblFeedback != null) {
+                lblFeedback.setText("");
+                lblFeedback.setVisible(false);
+                lblFeedback.setManaged(false);
+            }
+            return;
+        }
+
+        boolean valido = isBiValido(formatted);
+        if (valido) {
+            textField.setStyle("-fx-border-color: #10B981; -fx-border-width: 1.5px; -fx-border-radius: 6px;");
+            if (lblFeedback != null) {
+                lblFeedback.setText("✓ BI Moçambicano Válido (XX.XX.XXXXXXXX-X)");
+                lblFeedback.setStyle("-fx-font-size: 11px; -fx-text-fill: #10B981; -fx-font-weight: bold;");
+                lblFeedback.setVisible(true);
+                lblFeedback.setManaged(true);
+            }
+        } else {
+            String raw = normalizarBI(formatted);
+            if (raw.length() < 13) {
+                textField.setStyle("-fx-border-color: #3B82F6; -fx-border-width: 1.2px; -fx-border-radius: 6px;");
+                if (lblFeedback != null) {
+                    lblFeedback.setText(String.format("A preencher: %d/13 caracteres (Ex: 11.01.00234567-A)", raw.length()));
+                    lblFeedback.setStyle("-fx-font-size: 11px; -fx-text-fill: #3B82F6;");
+                    lblFeedback.setVisible(true);
+                    lblFeedback.setManaged(true);
+                }
+            } else {
+                textField.setStyle("-fx-border-color: #EF4444; -fx-border-width: 1.5px; -fx-border-radius: 6px;");
+                if (lblFeedback != null) {
+                    lblFeedback.setText("✕ Formato de BI inválido: esperado 12 dígitos seguidos de 1 letra maiúscula");
+                    lblFeedback.setStyle("-fx-font-size: 11px; -fx-text-fill: #EF4444; -fx-font-weight: bold;");
+                    lblFeedback.setVisible(true);
+                    lblFeedback.setManaged(true);
+                }
+            }
         }
     }
 }

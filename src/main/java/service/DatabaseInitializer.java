@@ -81,6 +81,14 @@ public class DatabaseInitializer {
             try {
                 st.executeUpdate("ALTER TABLE inscricao ADD COLUMN carta_motivacao TEXT");
             } catch (SQLException ignored) {}
+
+            try {
+                st.executeUpdate("ALTER TABLE inscricao ADD COLUMN tipo_admissao VARCHAR(30)");
+            } catch (SQLException ignored) {}
+
+            try {
+                st.executeUpdate("UPDATE administrador a JOIN utilizador u ON a.id = u.id SET a.cargo = 'Administrador Geral' WHERE u.email = 'admin@sis.ac.mz' AND a.cargo = 'Secretaria Geral'");
+            } catch (SQLException ignored) {}
         } catch (Exception e) {
             System.err.println("Aviso ao migrar novas colunas: " + e.getMessage());
         }

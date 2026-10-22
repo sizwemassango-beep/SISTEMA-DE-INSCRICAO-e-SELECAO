@@ -49,6 +49,7 @@ public class InscricaoDao implements Tabela<Inscricao> {
                 + "doc_atestado_pobreza VARCHAR(255), "
                 + "carta_motivacao TEXT, "
                 + "motivo_rejeicao VARCHAR(255), "
+                + "tipo_admissao VARCHAR(30), "
                 + "FOREIGN KEY (candidato_id) REFERENCES candidato(id) ON DELETE CASCADE)";
 
         try (Connection conn = conexao.getConexao();
@@ -66,6 +67,9 @@ public class InscricaoDao implements Tabela<Inscricao> {
             try {
                 st.executeUpdate("ALTER TABLE inscricao ADD COLUMN carta_motivacao TEXT");
             } catch (SQLException ignored) {}
+            try {
+                st.executeUpdate("ALTER TABLE inscricao ADD COLUMN tipo_admissao VARCHAR(30)");
+            } catch (SQLException ignored) {}
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao criar tabela inscricao", e);
         }
@@ -76,8 +80,8 @@ public class InscricaoDao implements Tabela<Inscricao> {
         validar(inscricao);
         String sql = "INSERT INTO inscricao (candidato_id, curso_id, curso_nome, nota, nota_12, status, data_inscricao, "
                 + "documentos_submetidos, documentos_validados, doc_identificacao, doc_certificado10, "
-                + "doc_certificado12_ou_recibo, tipo_comprovativo12, doc_atestado_pobreza, carta_motivacao, motivo_rejeicao) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "doc_certificado12_ou_recibo, tipo_comprovativo12, doc_atestado_pobreza, carta_motivacao, motivo_rejeicao, tipo_admissao) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = conexao.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -140,6 +144,89 @@ public class InscricaoDao implements Tabela<Inscricao> {
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar status da inscrição", e);
         }
+    }
+
+    public void atualizarStatusETipo(Long id, StatusInscricao status, String tipoAdmissao) {
+        String sql = "UPDATE inscricao SET status = ?, tipo_admissao = ? WHERE id = ?";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ps.setString(2, tipoAdmissao);
+            ps.setLong(3, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar status e tipo de admissão da inscrição", e);
+        }
+    }
+
+    public int contarAprovadosPorCursoETipo(Long cursoId, String tipoAdmissao) {
+        if (cursoId == null) return 0;
+        String sql = "SELECT COUNT(*) FROM inscricao WHERE curso_id = ? AND status = 'APROVADO' AND tipo_admissao = ?";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, cursoId);
+            ps.setString(2, tipoAdmissao);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao contar aprovados por curso e tipo: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    public double buscarNota12MaisBaixaPorCurso(Long cursoId) {
+        if (cursoId == null) return 0.0;
+        String sql = "SELECT MIN(nota_12) FROM inscricao WHERE curso_id = ? AND nota_12 > 0";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, cursoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    double val = rs.getDouble(1);
+                    return rs.wasNull() ? 0.0 : val;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar nota 12 mais baixa: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    public double buscarNota12MaisAltaPorCurso(Long cursoId) {
+        if (cursoId == null) return 0.0;
+        String sql = "SELECT MAX(nota_12) FROM inscricao WHERE curso_id = ? AND nota_12 > 0";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, cursoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    double val = rs.getDouble(1);
+                    return rs.wasNull() ? 0.0 : val;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar nota 12 mais alta: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    public double buscarMediaNota12PorCurso(Long cursoId) {
+        if (cursoId == null) return 0.0;
+        String sql = "SELECT AVG(nota_12) FROM inscricao WHERE curso_id = ? AND nota_12 > 0";
+        try (Connection conn = conexao.getConexao();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, cursoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    double val = rs.getDouble(1);
+                    return rs.wasNull() ? 0.0 : val;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar média nota 12: " + e.getMessage());
+        }
+        return 0.0;
     }
 
     public void atualizarNota(Long id, double nota) {
@@ -232,13 +319,13 @@ public class InscricaoDao implements Tabela<Inscricao> {
         String sql = "UPDATE inscricao SET candidato_id = ?, curso_id = ?, curso_nome = ?, nota = ?, nota_12 = ?, status = ?, "
                 + "data_inscricao = ?, documentos_submetidos = ?, documentos_validados = ?, doc_identificacao = ?, "
                 + "doc_certificado10 = ?, doc_certificado12_ou_recibo = ?, tipo_comprovativo12 = ?, "
-                + "doc_atestado_pobreza = ?, carta_motivacao = ?, motivo_rejeicao = ? WHERE id = ?";
+                + "doc_atestado_pobreza = ?, carta_motivacao = ?, motivo_rejeicao = ?, tipo_admissao = ? WHERE id = ?";
 
         try (Connection conn = conexao.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             preencherCompleto(ps, inscricao);
-            ps.setLong(17, inscricao.getId());
+            ps.setLong(18, inscricao.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar inscrição", e);
@@ -296,6 +383,7 @@ public class InscricaoDao implements Tabela<Inscricao> {
         ps.setString(14, inscricao.getDocAtestadoPobreza());
         ps.setString(15, inscricao.getCartaMotivacao());
         ps.setString(16, inscricao.getMotivoRejeicao());
+        ps.setString(17, inscricao.getTipoAdmissao());
     }
 
     private Optional<Inscricao> buscarUnico(String sql, Long parametro) {
@@ -320,6 +408,7 @@ public class InscricaoDao implements Tabela<Inscricao> {
             if (parametro != null) {
                 ps.setObject(1, parametro);
             }
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     lista.add(mapear(rs));
@@ -328,6 +417,7 @@ public class InscricaoDao implements Tabela<Inscricao> {
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao listar inscrições", e);
         }
+
         return lista;
     }
 
@@ -336,16 +426,13 @@ public class InscricaoDao implements Tabela<Inscricao> {
         inscricao.setId(rs.getLong("id"));
 
         long candidatoId = rs.getLong("candidato_id");
-        Optional<Candidato> candOpt = candidatoDao.buscarId(candidatoId);
-        candOpt.ifPresent(inscricao::setCandidato);
+        candidatoDao.buscarId(candidatoId).ifPresent(inscricao::setCandidato);
 
-        try {
-            long cid = rs.getLong("curso_id");
-            if (!rs.wasNull()) {
-                inscricao.setCursoId(cid);
-                cursoDao.buscarId(cid).ifPresent(inscricao::setCurso);
-            }
-        } catch (SQLException ignored) {}
+        long cursoId = rs.getLong("curso_id");
+        if (!rs.wasNull()) {
+            inscricao.setCursoId(cursoId);
+            cursoDao.buscarId(cursoId).ifPresent(inscricao::setCurso);
+        }
 
         try { inscricao.setCursoNome(rs.getString("curso_nome")); } catch (SQLException ignored) {}
 
@@ -376,6 +463,7 @@ public class InscricaoDao implements Tabela<Inscricao> {
         try { inscricao.setDocAtestadoPobreza(rs.getString("doc_atestado_pobreza")); } catch (SQLException ignored) {}
         try { inscricao.setCartaMotivacao(rs.getString("carta_motivacao")); } catch (SQLException ignored) {}
         try { inscricao.setMotivoRejeicao(rs.getString("motivo_rejeicao")); } catch (SQLException ignored) {}
+        try { inscricao.setTipoAdmissao(rs.getString("tipo_admissao")); } catch (SQLException ignored) {}
 
         return inscricao;
     }
